@@ -4,6 +4,7 @@ val ktorVersion = ext.get("ktorVersion").toString()
 val dusseldorfKtorVersion = "1.2.2.8f413ad"
 val kafkaEmbeddedEnvVersion = "2.1.1"
 val kafkaVersion = "2.0.1" // Aliigned med version fra kafka-embedded-env
+val wiremockVersion = "2.19.0"
 
 val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
@@ -18,11 +19,7 @@ buildscript {
 }
 
 repositories {
-//    maven("https://dl.bintray.com/kotlin/ktor")
-//    maven("https://kotlin.bintray.com/kotlinx")
-//    maven("http://packages.confluent.io/maven/")
-//
-//    jcenter()
+    maven("http://packages.confluent.io/maven/")
     mavenLocal()
     mavenCentral()
 }
@@ -41,6 +38,14 @@ dependencies {
 
     // Kafka
     compile("org.apache.kafka:kafka-clients:$kafkaVersion")
+
+    // Test
+    testCompile ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
+    testCompile ("com.github.tomakehurst:wiremock:$wiremockVersion")
+    testCompile("io.ktor:ktor-server-test-host:$ktorVersion") {
+        exclude(group = "org.eclipse.jetty")
+    }
+    testCompile("org.skyscreamer:jsonassert:1.5.0")
 }
 
 java {
@@ -52,6 +57,7 @@ java {
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
+
 
 tasks.withType<Jar> {
     manifest {
