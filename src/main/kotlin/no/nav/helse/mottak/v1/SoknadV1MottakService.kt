@@ -31,8 +31,6 @@ internal class SoknadV1MottakService(
         val soknadId = generateV1SoknadId()
         logger.info("$soknadId")
 
-        soknad.validate()
-
         val correlationId = CorrelationId(metadata.correlationId)
         logger.trace("Henter aktørID")
         val aktoerId = aktoerGateway.getAktoerId(
