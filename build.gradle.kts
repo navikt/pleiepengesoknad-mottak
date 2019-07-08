@@ -2,6 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktorVersion = ext.get("ktorVersion").toString()
 val dusseldorfKtorVersion = "1.2.2.8f413ad"
+val kafkaEmbeddedEnvVersion = "2.1.1"
+val kafkaVersion = "2.0.1" // Aliigned med version fra kafka-embedded-env
+
 val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
 
@@ -35,6 +38,9 @@ dependencies {
     // Client
     compile ( "no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
     compile ( "no.nav.helse:dusseldorf-oauth2-client:$dusseldorfKtorVersion")
+
+    // Kafka
+    compile("org.apache.kafka:kafka-clients:$kafkaVersion")
 }
 
 java {
