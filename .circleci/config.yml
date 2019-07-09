@@ -18,6 +18,7 @@ jobs:
             - ~/.gradle
           key: gradle-{{ checksum "build.gradle.kts" }}
       - nais/docker-deploy:
+          context: NAIS deployment
           image: navikt/pleiepengesoknad-mottak
 
 workflows:
