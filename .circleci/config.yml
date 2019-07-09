@@ -5,7 +5,7 @@ orbs:
 workflow:
   deploy-docker-and-nais:
     jobs:
-      - deploy-docker:
+      - build:
           docker:
             - image: 'circleci/openjdk:11-jdk'
           steps:
@@ -16,7 +16,7 @@ workflow:
 
       - deploy-dev:
           requires:
-            - deploy-docker
+            - build
           filters:
             branches:
               only: master
