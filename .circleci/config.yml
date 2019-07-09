@@ -3,25 +3,25 @@ orbs:
   nais: 'navikt/nais-deployment@1.1.0'
 
 jobs:
-  - build:
-      docker:
-        - image: 'circleci/openjdk:11-jdk'
-      steps:
-        - checkout
-        - run: ./gradlew check shadowJar
-        - nais/docker-deploy:
-            image: navikt/pleiepengesoknad-mottak
+  build:
+    docker:
+      - image: 'circleci/openjdk:11-jdk'
+    steps:
+      - checkout
+      - run: ./gradlew check shadowJar
+      - nais/docker-deploy:
+          image: navikt/pleiepengesoknad-mottak
 
-  - deploy-dev:
-      steps:
-        - nais/deploy:
-            build-and-push-docker-image: false
-            repo: navikt/pleiepengesoknad-mottak
-            image: navikt/pleiepengesoknad-mottak
-            github-app-id: 35124
-            nais-template: nais/dev-fss.yml
-            environment: dev-fss
-            team: dusseldorf
+  deploy-dev:
+    steps:
+      - nais/deploy:
+          build-and-push-docker-image: false
+          repo: navikt/pleiepengesoknad-mottak
+          image: navikt/pleiepengesoknad-mottak
+          github-app-id: 35124
+          nais-template: nais/dev-fss.yml
+          environment: dev-fss
+          team: dusseldorf
 
 workflows:
   version: 2
