@@ -12,8 +12,11 @@ jobs:
       - nais/docker-deploy:
           image: navikt/pleiepengesoknad-mottak
 
-  deploy-dev:
-    steps:
+workflows:
+  version: 2
+  deploy-docker-and-nais:
+    jobs:
+      - build
       - nais/deploy:
           build-and-push-docker-image: false
           repo: navikt/pleiepengesoknad-mottak
@@ -22,13 +25,6 @@ jobs:
           nais-template: nais/dev-fss.yml
           environment: dev-fss
           team: dusseldorf
-
-workflows:
-  version: 2
-  deploy-docker-and-nais:
-    jobs:
-      - build
-      - deploy-dev:
           filters:
             branches:
               only: master
