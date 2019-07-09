@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val ktorVersion = ext.get("ktorVersion").toString()
 val dusseldorfKtorVersion = "1.2.2.8f413ad"
@@ -14,15 +15,18 @@ plugins {
     id("com.github.johnrengelman.shadow") version "5.0.0"
 }
 
+
 buildscript {
     apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/8f413ad909a79e6f5e5897f43f009152ab2f0f35/gradle/dusseldorf-ktor.gradle.kts")
 }
+
 
 repositories {
     maven("http://packages.confluent.io/maven/")
     mavenLocal()
     mavenCentral()
 }
+
 
 dependencies {
     // Server
@@ -60,7 +64,9 @@ tasks.withType<KotlinCompile> {
 }
 
 
-tasks.withType<Jar> {
+tasks.withType<ShadowJar> {
+    archiveBaseName.set("app")
+    archiveClassifier.set("")
     manifest {
         attributes(
             mapOf(
