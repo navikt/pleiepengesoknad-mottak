@@ -16,7 +16,16 @@ private const val subject = "srvpleiepengesokna"
 private const val aktoerRegisterBasePath = "/aktoerregister-mock"
 private const val pleiepengerDokumentBasePath = "/pleiepenger-dokument-mock"
 
+
+
 object WiremockWrapper {
+
+    // Se https://github.com/navikt/dusseldorf-ktor#f%C3%B8dselsnummer
+    internal val gyldigFodselsnummerA = "02119970078"
+    internal val gyldigFodselsnummerB = "19066672169"
+    internal val gyldigFodselsnummerC = "20037473937"
+    internal val dNummerA = "55125314561"
+
 
     fun bootstrap(
         port: Int? = null,
@@ -45,7 +54,10 @@ object WiremockWrapper {
         stubHealthEndpoint("$pleiepengerDokumentBasePath/health")
 
         stubLagreDokument(wireMockServer.getPleiepengerDokumentBaseUrl())
-        stubAktoerRegisterGetAktoerId("29099012345", "123456")
+        stubAktoerRegisterGetAktoerId(gyldigFodselsnummerA, "1234561")
+        stubAktoerRegisterGetAktoerId(gyldigFodselsnummerB, "1234562")
+        stubAktoerRegisterGetAktoerId(gyldigFodselsnummerC, "1234563")
+        stubAktoerRegisterGetAktoerId(dNummerA, "1234564")
 
         logger.info("Mock available on '{}'", wireMockServer.baseUrl())
         return wireMockServer

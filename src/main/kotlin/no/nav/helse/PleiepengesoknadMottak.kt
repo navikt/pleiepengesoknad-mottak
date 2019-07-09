@@ -1,9 +1,6 @@
 package no.nav.helse
 
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.call
-import io.ktor.application.install
+import io.ktor.application.*
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.features.CallId
@@ -23,6 +20,8 @@ import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.clients
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
 import no.nav.helse.dusseldorf.ktor.core.*
+import no.nav.helse.dusseldorf.ktor.health.HealthRoute
+import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
@@ -32,7 +31,6 @@ import no.nav.helse.mottak.v1.SoknadV1KafkaProducer
 import no.nav.helse.mottak.v1.SoknadV1MottakService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 
 private val logger: Logger = LoggerFactory.getLogger("no.nav.PleiepengesoknadMottak")
 
@@ -83,7 +81,24 @@ fun Application.pleiepengesoknadMottak() {
         logRequests()
     }
 
+    val soknadV1KafkaProducer = SoknadV1KafkaProducer(
+        kafkaConfig = configuration.getKafkaConfig()
+    )
+
+    environment.monitor.subscribe(ApplicationStopping) {
+        logger.info("Stopper Kafka Producer.")
+        soknadV1KafkaProducer.stop()
+        logger.info("Kafka Producer Stoppet.")
+    }
+
     install(Routing) {
+        HealthRoute(
+            healthService = HealthService(
+                healthChecks = setOf(
+                    soknadV1KafkaProducer
+                )
+            )
+        )
         MetricsRoute()
         DefaultProbeRoutes()
         authenticate(*issuers.allIssuers()) {
@@ -98,9 +113,7 @@ fun Application.pleiepengesoknadMottak() {
                             accessTokenClient = accessTokenClientResolver.aktoerRegisterAccessTokenClient(),
                             baseUrl = configuration.getAktoerRegisterBaseUrl()
                         ),
-                        soknadV1KafkaProducer = SoknadV1KafkaProducer(
-                            kafkaConfig = configuration.getKafkaConfig()
-                        )
+                        soknadV1KafkaProducer = soknadV1KafkaProducer
                     )
                 )
             }

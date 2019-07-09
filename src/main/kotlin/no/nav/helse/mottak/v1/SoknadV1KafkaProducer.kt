@@ -2,6 +2,10 @@ package no.nav.helse.mottak.v1
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.Metadata
+import no.nav.helse.dusseldorf.ktor.health.HealthCheck
+import no.nav.helse.dusseldorf.ktor.health.Healthy
+import no.nav.helse.dusseldorf.ktor.health.Result
+import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.kafka.KafkaConfig
 import no.nav.helse.kafka.TopicEntry
@@ -14,7 +18,8 @@ import org.slf4j.LoggerFactory
 
 internal class SoknadV1KafkaProducer(
     kafkaConfig: KafkaConfig
-) {
+) : HealthCheck {
+
     private companion object {
         private val NAME = "SoknadV1Producer"
         private val TOPIC_USE = TopicUse(
@@ -38,7 +43,7 @@ internal class SoknadV1KafkaProducer(
 
         val recordMetaData = producer.send(
             ProducerRecord(
-                Topics.MOTTATT,
+                TOPIC_USE.name,
                 soknad.soknadId,
                 TopicEntry(
                     metadata = metadata,
@@ -47,7 +52,20 @@ internal class SoknadV1KafkaProducer(
             )
         ).get()
 
-        logger.info("Søknad '${soknad.soknadId}' sendt til Topic '${Topics.MOTTATT}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
+        logger.info("Søknad '${soknad.soknadId}' sendt til Topic '${TOPIC_USE.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
+    }
+
+
+    internal fun stop() = producer.close()
+
+    override suspend fun check(): Result {
+        return try {
+            producer.partitionsFor(TOPIC_USE.name)
+            Healthy(NAME, "Tilkobling til Kafka OK!")
+        } catch (cause: Throwable) {
+            logger.error("Feil ved tilkobling til Kafka", cause)
+            UnHealthy(NAME, "Feil ved tilkobling mot Kafka. ${cause.message}")
+        }
     }
 }
 
