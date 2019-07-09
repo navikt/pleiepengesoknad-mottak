@@ -20,11 +20,12 @@ workflow:
           filters:
             branches:
               only: master
-          - nais/deploy:
-              build-and-push-docker-image: false
-              repo: navikt/pleiepengesoknad-mottak
-              image: navikt/pleiepengesoknad-mottak
-              github-app-id: 35124
-              nais-template: nais/dev-fss.yml
-              environment: dev-fss
-              team: dusseldorf
+          steps:
+            - nais/deploy:
+                build-and-push-docker-image: false
+                repo: navikt/pleiepengesoknad-mottak
+                image: navikt/pleiepengesoknad-mottak
+                github-app-id: 35124
+                nais-template: nais/dev-fss.yml
+                environment: dev-fss
+                team: dusseldorf
