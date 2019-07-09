@@ -4,11 +4,19 @@ orbs:
 
 jobs:
   build:
+    working_directory: ~/pleiepengesoknad-mottak
     docker:
       - image: 'circleci/openjdk:11-jdk'
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle.kts" }}
       - run: ./gradlew check shadowJar
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle.kts" }}
       - nais/docker-deploy:
           image: navikt/pleiepengesoknad-mottak
 

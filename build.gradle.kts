@@ -23,6 +23,7 @@ buildscript {
 
 repositories {
     maven("http://packages.confluent.io/maven/")
+    jcenter()
     mavenLocal()
     mavenCentral()
 }
