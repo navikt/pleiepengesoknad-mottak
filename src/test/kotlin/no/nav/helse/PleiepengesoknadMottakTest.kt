@@ -14,8 +14,10 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.common.KafkaEnvironment
+import no.nav.helse.WiremockWrapper.dNummerA
 import no.nav.helse.WiremockWrapper.gyldigFodselsnummerA
 import no.nav.helse.WiremockWrapper.gyldigFodselsnummerB
+import no.nav.helse.aktoer.AktoerId
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.mottak.v1.*
@@ -25,8 +27,7 @@ import org.junit.BeforeClass
 import org.skyscreamer.jsonassert.JSONAssert
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import java.time.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -108,10 +109,219 @@ class PleiepengesoknadMottakTest {
             expectedCode = HttpStatusCode.Accepted,
             expectedResponse = null
         )
-        assertSoknadSendtTilProsessering(soknadId)
+
+        val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
+        verifiserSoknadLagtTilProsessering(
+            incoming = soknad,
+            outgoing = sendtTilProsessering
+        )
+    }
+
+    @Test
+    fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
+        val soknad = gyldigSoknad(
+            fodselsnummerSoker = dNummerA,
+            fodselsnummerBarn = gyldigFodselsnummerB
+        )
+
+        val soknadId = requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.Accepted,
+            expectedResponse = null
+        )
+
+        val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
+        verifiserSoknadLagtTilProsessering(
+            incoming = soknad,
+            outgoing = sendtTilProsessering
+        )
+    }
+
+    @Test
+    fun `Request fra ikke autorisert system feiler`() {
+        val soknad = gyldigSoknad(
+            fodselsnummerSoker = gyldigFodselsnummerA,
+            fodselsnummerBarn = gyldigFodselsnummerB
+        )
+
+        requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.Forbidden,
+            expectedResponse = """
+            {
+                "type": "/problem-details/unauthorized",
+                "title": "unauthorized",
+                "status": 403,
+                "detail": "Requesten inneholder ikke tilstrekkelige tilganger.",
+                "instance": "about:blank"
+            }
+            """.trimIndent(),
+            accessToken = unAauthorizedAccessToken
+        )
+    }
+
+    @Test
+    fun `Request uten corelation id feiler`() {
+        val soknad = gyldigSoknad(
+            fodselsnummerSoker = gyldigFodselsnummerA,
+            fodselsnummerBarn = gyldigFodselsnummerB
+        )
+
+        requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.BadRequest,
+            expectedResponse = """
+                {
+                    "type": "/problem-details/invalid-request-parameters",
+                    "title": "invalid-request-parameters",
+                    "detail": "Requesten inneholder ugyldige paramtere.",
+                    "status": 400,
+                    "instance": "about:blank",
+                    "invalid_parameters" : [
+                        {
+                            "name" : "X-Correlation-ID",
+                            "reason" : "Correlation ID må settes.",
+                            "type": "header",
+                            "invalid_value": null
+                        }
+                    ]
+                }
+            """.trimIndent(),
+            leggTilCorrelationId = false
+        )
+    }
+
+    @Test
+    fun `En ugyldig melding gir valideringsfeil`() {
+        val fraOgMedString = "2019-04-02"
+        val tilOgMedString = "2019-04-01"
+        val gyldigOrgnr = "917755736"
+        val kortOrgnr = "123456"
+        val ugyldigOrgnr = "987654321"
+        val fodselsnummerSoker = "290990123451"
+        val fodselsnummerBarn = "29099054321"
+        val alternativIdBarn = "123F"
+
+        val soknad = SoknadV1Incoming(
+            mottatt = ZonedDateTime.now(),
+            fraOgMed = LocalDate.parse(fraOgMedString),
+            tilOgMed = LocalDate.parse(tilOgMedString),
+            soker = SokerIncoming(
+                fodselsnummer = fodselsnummerSoker,
+                etternavn = "Nordmann",
+                mellomnavn = "Mellomnavn",
+                fornavn = "Ola"
+            ),
+            barn = Barn(
+                navn = "Kari",
+                fodselsnummer = fodselsnummerBarn,
+                alternativId = alternativIdBarn
+            ),
+            relasjonTilBarnet = "Mor",
+            arbeidsgivere = Arbeidsgivere(
+                organisasjoner = listOf(
+                    Organisasjon(gyldigOrgnr, "Gyldig"),
+                    Organisasjon(kortOrgnr, "ForKort"),
+                    Organisasjon(ugyldigOrgnr, "Ugyldig")
+                )
+            ),
+            vedlegg = listOf(),
+            medlemskap = Medlemskap(
+                harBoddIUtlandetSiste12Mnd = true,
+                skalBoIUtlandetNeste12Mnd = true
+            ),
+            harMedsoker = true,
+            grad = 120,
+            harBekreftetOpplysninger = false,
+            harForstattRettigheterOgPlikter = false
+        )
+        requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.BadRequest,
+            expectedResponse = """
+                {
+                    "type": "/problem-details/invalid-request-parameters",
+                    "title": "invalid-request-parameters",
+                    "status": 400,
+                    "detail": "Requesten inneholder ugyldige paramtere.",
+                    "instance": "about:blank",
+                    "invalid_parameters": [{
+                        "type": "entity",
+                        "name": "vedlegg",
+                        "reason": "Det må sendes minst et vedlegg.",
+                        "invalid_value": []
+                    }, {
+                        "type": "entity",
+                        "name": "soker.fodselsnummer",
+                        "reason": "Ikke gyldig fødselsnummer.",
+                        "invalid_value": "$fodselsnummerSoker"
+                    }, {
+                        "type": "entity",
+                        "name": "barn.fodselsnummer",
+                        "reason": "Ikke gyldig fødselsnummer.",
+                        "invalid_value": "$fodselsnummerBarn"
+                    }, {
+                        "type": "entity",
+                        "name": "barn.alternativ_id",
+                        "reason": "Ikke gyldig alternativ id. Kan kun inneholde tall.",
+                        "invalid_value": "$alternativIdBarn"
+                    }, {
+                        "type": "entity",
+                        "name": "arbeidsgivere.organisasjoner[1].organisasjonsnummer",
+                        "reason": "Ikke gyldig organisasjonsnummer.",
+                        "invalid_value": "$kortOrgnr"
+                    }, {
+                        "type": "entity",
+                        "name": "arbeidsgivere.organisasjoner[2].organisasjonsnummer",
+                        "reason": "Ikke gyldig organisasjonsnummer.",
+                        "invalid_value": "$ugyldigOrgnr"
+                    },{
+                        "type": "entity",
+                        "name": "har_bekreftet_opplysninger",
+                        "reason": "Opplysningene må bekreftes for å legge søknad til prosessering.",
+                        "invalid_value": false
+                    },{
+                        "type": "entity",
+                        "name": "har_forstatt_rettigheter_og_plikter",
+                        "reason": "Må ha forstått rettigheter og plikter for å legge søknad til prosessering.",
+                        "invalid_value": false
+                    },{
+                        "type": "entity",
+                        "name": "grad",
+                        "reason": "Grad må være mellom 20 og 100.",
+                        "invalid_value": 120
+                    },{
+                        "type": "entity",
+                        "name": "fra_og_med",
+                        "reason": "Fra og med må være før eller lik til og med.",
+                        "invalid_value": "$fraOgMedString"
+                    }, {
+                        "type": "entity",
+                        "name": "til_og_med",
+                        "reason": "Til og med må være etter eller lik fra og med.",
+                        "invalid_value": "$tilOgMedString"
+                    }]
+                }
+            """.trimIndent()
+        )
     }
 
     // Utils
+    private fun verifiserSoknadLagtTilProsessering(
+        incoming: SoknadV1Incoming,
+        outgoing: SoknadV1Outgoing
+    ) {
+        val outgoingFromIncoming = SoknadV1Outgoing(
+            incoming = incoming,
+            aktoerId = AktoerId(outgoing.soker.aktoerId),
+            soknadId = SoknadId(outgoing.soknadId),
+            vedleggUrls = outgoing.vedleggUrls
+        )
+
+        assertEquals(outgoingFromIncoming, outgoing)
+    }
+
+
     private fun requestAndAssert(soknad : SoknadV1Incoming,
                                  expectedResponse : String?,
                                  expectedCode : HttpStatusCode,
@@ -161,7 +371,11 @@ class PleiepengesoknadMottakTest {
             content = "iPhone_6.jpg".fromResources().readBytes()
         )
     ) : SoknadV1Incoming = SoknadV1Incoming(
-        mottatt = ZonedDateTime.now(),
+        mottatt = ZonedDateTime.ofInstant(
+            LocalDateTime.now(),
+            ZoneOffset.UTC,
+            ZoneId.of("UTC")
+        ),
         fraOgMed = LocalDate.now(),
         tilOgMed = LocalDate.now().plusWeeks(1),
         soker = SokerIncoming(
@@ -192,8 +406,8 @@ class PleiepengesoknadMottakTest {
         harForstattRettigheterOgPlikter = true
     )
 
-    private fun assertSoknadSendtTilProsessering(soknadId: String?) {
+    private fun hentSoknadSendtTilProsessering(soknadId: String?) : SoknadV1Outgoing {
         assertNotNull(soknadId)
-        kafkaTestConsumer.hentSoknad(soknadId)
+        return kafkaTestConsumer.hentSoknad(soknadId).data
     }
 }
