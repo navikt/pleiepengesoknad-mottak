@@ -52,7 +52,7 @@ internal class SoknadV1KafkaProducer(
             )
         ).get()
 
-        logger.info("Søknad '${soknad.soknadId}' sendt til Topic '${TOPIC_USE.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
+        logger.info("Søknad sendt til Topic '${TOPIC_USE.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
     }
 
 

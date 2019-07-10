@@ -12,6 +12,7 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.post
 import no.nav.helse.Metadata
+import no.nav.helse.getSoknadId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -22,9 +23,11 @@ internal fun Route.SoknadV1Api(
     soknadV1MottakService: SoknadV1MottakService
 ) {
     post("v1/soknad") {
+        val soknadId = call.getSoknadId()
         val metadata = call.metadata()
         val soknad = call.soknad()
-        val soknadId = soknadV1MottakService.leggTilProsessering(
+        soknadV1MottakService.leggTilProsessering(
+            soknadId = soknadId,
             metadata = metadata,
             soknad = soknad
         )

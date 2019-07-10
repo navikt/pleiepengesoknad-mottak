@@ -10,7 +10,6 @@ import no.nav.helse.dokument.Dokument
 import no.nav.helse.dokument.DokumentGateway
 import org.slf4j.LoggerFactory
 import java.net.URI
-import java.util.*
 
 internal class SoknadV1MottakService(
     private val dokumentGateway: DokumentGateway,
@@ -20,17 +19,13 @@ internal class SoknadV1MottakService(
 
     private companion object {
         private val logger = LoggerFactory.getLogger(SoknadV1MottakService::class.java)
-        private fun generateV1SoknadId() = SoknadId(UUID.randomUUID().toString())
     }
 
     internal suspend fun leggTilProsessering(
+        soknadId: SoknadId,
         metadata: Metadata,
         soknad: SoknadV1Incoming
     ) : SoknadId {
-        logger.info("$metadata")
-        val soknadId = generateV1SoknadId()
-        logger.info("$soknadId")
-
         val correlationId = CorrelationId(metadata.correlationId)
         logger.trace("Henter aktørID")
         val aktoerId = aktoerGateway.getAktoerId(

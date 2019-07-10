@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
+import io.ktor.util.AttributeKey
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import no.nav.helse.aktoer.AktoerGateway
@@ -32,8 +33,11 @@ import no.nav.helse.mottak.v1.SoknadV1MottakService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("no.nav.PleiepengesoknadMottak")
+private const val soknadIdKey = "soknad_id"
+private val soknadIdAttributeKey = AttributeKey<String>(soknadIdKey)
 
 fun main(args: Array<String>): Unit  = io.ktor.server.netty.EngineMain.main(args)
 
@@ -80,6 +84,7 @@ fun Application.pleiepengesoknadMottak() {
     install(CallLogging) {
         correlationIdAndRequestIdInMdc()
         logRequests()
+        mdc(soknadIdKey) { it.setSoknadItAsAttributeAndGet() }
     }
 
     val soknadV1KafkaProducer = SoknadV1KafkaProducer(
@@ -131,3 +136,10 @@ private fun Map<Issuer, Set<ClaimRule>>.healthCheckMap(
     }
     return initial.toMap()
 }
+
+private fun ApplicationCall.setSoknadItAsAttributeAndGet() : String {
+    val soknadId = UUID.randomUUID().toString()
+    attributes.put(soknadIdAttributeKey, soknadId)
+    return soknadId
+}
+internal fun ApplicationCall.getSoknadId() = SoknadId(attributes[soknadIdAttributeKey])
