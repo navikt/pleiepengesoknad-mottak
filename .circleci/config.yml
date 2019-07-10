@@ -27,6 +27,7 @@ workflows:
       - build:
           context: NAIS deployment
       - nais/deploy:
+          name: dev-deploy
           build-and-push-docker-image: false
           repo: navikt/pleiepengesoknad-mottak
           image: navikt/pleiepengesoknad-mottak
