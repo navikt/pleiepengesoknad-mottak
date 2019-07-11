@@ -39,11 +39,11 @@ workflows:
   deploy-docker-and-nais:
     jobs:
       - check:
-        filters:
-          branches:
-            ignore:
-              - master
-              - /dev-.*/
+          filters:
+            branches:
+              ignore:
+                - master
+                - /dev-.*/
       - build:
           context: NAIS deployment
           filters:
