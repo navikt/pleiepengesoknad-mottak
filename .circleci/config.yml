@@ -80,6 +80,5 @@ workflows:
             branches:
               only:
                 - master
-                - /dev-.*/
           requires:
             - build
