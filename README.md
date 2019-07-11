@@ -118,4 +118,4 @@ Request ID blir ikke propagert videre, og skal ha sitt opphav hos konsumenten om
 - Versjon på meldingen avledes fra pathen '/v1/soknad' -> 1
 
 ## For NAV-ansatte
-Interne henvendelser kan sendes via Slack i kanalen #område-helse.
+Interne henvendelser kan sendes via Slack i kanalen #team-düsseldorf
