@@ -108,6 +108,7 @@ fun Application.pleiepengesoknadMottak() {
         )
         MetricsRoute()
         DefaultProbeRoutes()
+        DefaultProbeRoutes(readyPath = "/devready", alivePath = "/devalive")
         authenticate(*issuers.allIssuers()) {
             requiresCallId {
                 SoknadV1Api(
