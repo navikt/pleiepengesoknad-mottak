@@ -2,6 +2,10 @@ package no.nav.helse
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import no.nav.common.KafkaEnvironment
+import no.nav.helse.dusseldorf.ktor.testsupport.jws.ClientCredentials
+import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getAzureV1WellKnownUrl
+import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getAzureV2WellKnownUrl
+import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getNaisStsWellKnownUrl
 
 object TestConfiguration {
 
@@ -9,45 +13,64 @@ object TestConfiguration {
         wireMockServer: WireMockServer? = null,
         kafkaEnvironment: KafkaEnvironment? = null,
         port : Int = 8080,
-        jwkSetUrl : String? = wireMockServer?.getJwksUrl(),
-        tokenUrl : String? = wireMockServer?.getTokenUrl(),
-        issuer : String? = wireMockServer?.baseUrl(),
-        authorizedSystems : String? = wireMockServer?.getSubject(),
         aktoerRegisterBaseUrl : String? = wireMockServer?.getAktoerRegisterBaseUrl(),
         pleiepeingerDokumentBaseUrl : String? = wireMockServer?.getPleiepengerDokumentBaseUrl(),
-        clientSecret : String? = "foo"
+        naisStsAuthoriedClients: Set<String> = setOf("srvpleiepengesokna"),
+        pleiepengersoknadMottakAzureClientId: String = "pliepengesoknad-mottak",
+        azureAuthorizedClients: Set<String> = setOf("azure-client-1", "azure-client-2","azure-client-3")
     ) : Map<String, String>{
         val map = mutableMapOf(
             Pair("ktor.deployment.port","$port"),
-            Pair("nav.auth.clients.0.alias", "nais-sts"),
-            Pair("nav.auth.clients.0.client_id", "srvpps-prosessering"),
-            Pair("nav.auth.clients.0.token_endpoint", "$tokenUrl"),
-            Pair("nav.auth.issuers.0.alias","nais-sts"),
-            Pair("nav.auth.issuers.0.issuer","$issuer"),
-            Pair("nav.auth.issuers.0.jwks_uri","$jwkSetUrl"),
-            Pair("nav.rest_api.authorized_systems","$authorizedSystems"),
             Pair("nav.aktoer_register_base_url","$aktoerRegisterBaseUrl"),
             Pair("nav.pleiepenger_dokument_base_url","$pleiepeingerDokumentBaseUrl")
         )
 
-        clientSecret?.let {
-            map["nav.auth.clients.0.client_secret"] = it
-        }
-
+        // Kafka
         kafkaEnvironment?.let {
             map["nav.kafka.bootstrap_servers"] = it.brokersURL
             map["nav.kafka.username"] = it.username()
             map["nav.kafka.password"] = it.password()
         }
 
-        return map.toMap()
-    }
-
-    fun asArray(map : Map<String, String>) : Array<String>  {
-        val list = mutableListOf<String>()
-        map.forEach { configKey, configValue ->
-            list.add("-P:$configKey=$configValue")
+        // Clients
+        if (wireMockServer != null) {
+            map["nav.auth.clients.0.alias"] = "nais-sts"
+            map["nav.auth.clients.0.client_id"] = "srvpps-mottak"
+            map["nav.auth.clients.0.client_secret"] = "very-secret"
+            map["nav.auth.clients.0.discovery_endpoint"] = wireMockServer.getNaisStsWellKnownUrl()
         }
-        return list.toTypedArray()
+
+        if (wireMockServer != null) {
+            map["nav.auth.clients.1.alias"] = "azure-v2"
+            map["nav.auth.clients.1.client_id"] = "pleiepengesoknad-mottak"
+            map["nav.auth.clients.1.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
+            map["nav.auth.clients.1.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
+            map["nav.auth.clients.1.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
+            map["nav.auth.scopes.lagre-dokument"] = "pleiepenger-dokument/.default"
+        }
+
+        // Issuers
+        if (wireMockServer != null) {
+            map["nav.auth.issuers.0.alias"] = "nais-sts"
+            map["nav.auth.issuers.0.discovery_endpoint"] = wireMockServer.getNaisStsWellKnownUrl()
+            map["nav.auth.nais-sts.authorized_clients"] = naisStsAuthoriedClients.joinToString(", ")
+        }
+        if (wireMockServer != null) {
+            map["nav.auth.issuers.1.type"] = "azure"
+            map["nav.auth.issuers.1.alias"] = "azure-v1"
+            map["nav.auth.issuers.1.discovery_endpoint"] = wireMockServer.getAzureV1WellKnownUrl()
+            map["nav.auth.issuers.1.audience"] = pleiepengersoknadMottakAzureClientId
+            map["nav.auth.issuers.1.azure.require_certificate_client_authentication"] = "true"
+            map["nav.auth.issuers.1.azure.authorized_clients"] = azureAuthorizedClients.joinToString(",")
+
+            map["nav.auth.issuers.2.type"] = "azure"
+            map["nav.auth.issuers.2.alias"] = "azure-v2"
+            map["nav.auth.issuers.2.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
+            map["nav.auth.issuers.2.audience"] = pleiepengersoknadMottakAzureClientId
+            map["nav.auth.issuers.2.azure.require_certificate_client_authentication"] = "true"
+            map["nav.auth.issuers.2.azure.authorized_clients"] = azureAuthorizedClients.joinToString(",")
+        }
+
+        return map.toMap()
     }
 }

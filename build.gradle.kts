@@ -44,13 +44,12 @@ dependencies {
     compile("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     // Test
-    testCompile ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
-    testCompile ("no.nav.security:oidc-test-support:0.2.18")
+    testCompile  ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
     testCompile ( "no.nav.helse:dusseldorf-ktor-test-support:$dusseldorfKtorVersion")
-    testCompile ("io.ktor:ktor-server-test-host:$ktorVersion") {
+    testCompile ( "io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testCompile("org.skyscreamer:jsonassert:1.5.0")
+    testCompile( "org.skyscreamer:jsonassert:1.5.0")
 }
 
 java {
