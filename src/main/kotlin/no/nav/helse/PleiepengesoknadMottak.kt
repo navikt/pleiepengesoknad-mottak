@@ -8,6 +8,7 @@ import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
 import io.ktor.jackson.jackson
 import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
@@ -20,6 +21,7 @@ import no.nav.helse.dokument.DokumentGateway
 import no.nav.helse.dusseldorf.ktor.auth.*
 import no.nav.helse.dusseldorf.ktor.client.HttpRequestHealthCheck
 import no.nav.helse.dusseldorf.ktor.client.HttpRequestHealthConfig
+import no.nav.helse.dusseldorf.ktor.client.buildURL
 import no.nav.helse.dusseldorf.ktor.core.*
 import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -97,12 +99,27 @@ fun Application.pleiepengesoknadMottak() {
         logger.info("Kafka Producer Stoppet.")
     }
 
+    val dokumentGateway = DokumentGateway(
+        accessTokenClient = accessTokenClientResolver.dokumentAccessTokenClient(),
+        baseUrl = configuration.getPleiepengerDokumentBaseUrl(),
+        lagreDokumentScopes = configuration.getLagreDokumentScopes()
+    )
+
+    val aktoerGateway = AktoerGateway(
+        accessTokenClient = accessTokenClientResolver.aktoerRegisterAccessTokenClient(),
+        baseUrl = configuration.getAktoerRegisterBaseUrl()
+    )
+
     install(Routing) {
         HealthRoute(
             healthService = HealthService(
                 healthChecks = setOf(
                     soknadV1KafkaProducer,
-                    HttpRequestHealthCheck(issuers.healthCheckMap())
+                    dokumentGateway,
+                    aktoerGateway,
+                    HttpRequestHealthCheck(issuers.healthCheckMap(mutableMapOf(
+                        Url.healthURL(configuration.getPleiepengerDokumentBaseUrl()) to HttpRequestHealthConfig(expectedStatus = HttpStatusCode.OK)
+                    )))
                 )
             )
         )
@@ -112,14 +129,8 @@ fun Application.pleiepengesoknadMottak() {
             requiresCallId {
                 SoknadV1Api(
                     soknadV1MottakService = SoknadV1MottakService(
-                        dokumentGateway = DokumentGateway(
-                            accessTokenClient = accessTokenClientResolver.dokumentAccessTokenClient(),
-                            baseUrl = configuration.getPleiepengerDokumentBaseUrl()
-                        ),
-                        aktoerGateway = AktoerGateway(
-                            accessTokenClient = accessTokenClientResolver.aktoerRegisterAccessTokenClient(),
-                            baseUrl = configuration.getAktoerRegisterBaseUrl()
-                        ),
+                        dokumentGateway = dokumentGateway,
+                        aktoerGateway = aktoerGateway,
                         soknadV1KafkaProducer = soknadV1KafkaProducer
                     )
                 )
@@ -136,6 +147,7 @@ private fun Map<Issuer, Set<ClaimRule>>.healthCheckMap(
     }
     return initial.toMap()
 }
+private fun Url.Companion.healthURL(baseUrl: URI) = Url.buildURL(baseUrl = baseUrl, pathParts = listOf("health"))
 
 private fun ApplicationCall.setSoknadItAsAttributeAndGet() : String {
     val soknadId = UUID.randomUUID().toString()

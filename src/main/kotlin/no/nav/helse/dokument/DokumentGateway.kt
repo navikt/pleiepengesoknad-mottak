@@ -16,9 +16,13 @@ import no.nav.helse.CorrelationId
 import no.nav.helse.aktoer.AktoerId
 import no.nav.helse.dusseldorf.ktor.client.buildURL
 import no.nav.helse.dusseldorf.ktor.core.Retry
+import no.nav.helse.dusseldorf.ktor.health.HealthCheck
+import no.nav.helse.dusseldorf.ktor.health.Healthy
+import no.nav.helse.dusseldorf.ktor.health.Result
+import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
+import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.helse.mottak.v1.Vedlegg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
@@ -26,9 +30,10 @@ import java.net.URI
 import java.time.Duration
 
 internal class DokumentGateway(
-    private val accessTokenClient: CachedAccessTokenClient,
+    private val accessTokenClient: AccessTokenClient,
+    private val lagreDokumentScopes: Set<String>,
     baseUrl : URI
-){
+) : HealthCheck {
 
     private companion object {
         private const val LAGRE_DOKUMENT_OPERATION = "lagre-dokument"
@@ -41,13 +46,24 @@ internal class DokumentGateway(
     )
 
     private val objectMapper = configuredObjectMapper()
+    private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
+
+    override suspend fun check(): Result {
+        return try {
+            accessTokenClient.getAccessToken(lagreDokumentScopes)
+            Healthy("DokumentGateway", "Henting av access token å lagre dokument OK.")
+        } catch (cause: Throwable) {
+            logger.error("Feil ved henting av access token for å lage dokument", cause)
+            UnHealthy("DokumentGateway", "Henting av access token for å lagre dokument feilet.")
+        }
+    }
 
     internal suspend fun lagreDokmenter(
         dokumenter: Set<Dokument>,
         aktoerId: AktoerId,
         correlationId: CorrelationId
     ) : List<URI> {
-        val authorizationHeader = accessTokenClient.getAccessToken(setOf("openid")).asAuthoriationHeader()
+        val authorizationHeader = cachedAccessTokenClient.getAccessToken(lagreDokumentScopes).asAuthoriationHeader()
 
         return coroutineScope {
             val deferred = mutableListOf<Deferred<URI>>()
