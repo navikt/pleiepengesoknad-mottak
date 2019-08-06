@@ -17,6 +17,7 @@ import no.nav.common.KafkaEnvironment
 import no.nav.helse.aktoer.AktoerId
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.NaisSts
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.mottak.v1.*
@@ -68,7 +69,12 @@ class PleiepengesoknadMottakTest {
 
         private fun getConfig(kafkaEnvironment: KafkaEnvironment) : ApplicationConfig {
             val fileConfig = ConfigFactory.load()
-            val testConfig = ConfigFactory.parseMap(TestConfiguration.asMap(wireMockServer = wireMockServer, kafkaEnvironment = kafkaEnvironment))
+            val testConfig = ConfigFactory.parseMap(TestConfiguration.asMap(
+                wireMockServer = wireMockServer,
+                kafkaEnvironment = kafkaEnvironment,
+                pleiepengersoknadMottakAzureClientId = "pleiepengesoknad-mottak",
+                azureAuthorizedClients = setOf("pleiepengesoknad-api")
+            ))
             val mergedConfig = testConfig.withFallback(fileConfig)
             return HoconApplicationConfig(mergedConfig)
         }
@@ -116,6 +122,12 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Gyldig søknad blir lagt til prosessering`() {
+        gyldigSoknadBlirLagtTilProsessering(authorizedAccessToken)
+        gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+        gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+    }
+
+    private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
         val soknad = gyldigSoknad(
             fodselsnummerSoker = gyldigFodselsnummerA,
             fodselsnummerBarn = gyldigFodselsnummerB
@@ -124,7 +136,8 @@ class PleiepengesoknadMottakTest {
         val soknadId = requestAndAssert(
             soknad = soknad,
             expectedCode = HttpStatusCode.Accepted,
-            expectedResponse = null
+            expectedResponse = null,
+            accessToken = accessToken
         )
 
         val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
