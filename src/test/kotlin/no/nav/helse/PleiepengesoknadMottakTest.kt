@@ -14,12 +14,12 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.common.KafkaEnvironment
-import no.nav.helse.WiremockWrapper.dNummerA
-import no.nav.helse.WiremockWrapper.gyldigFodselsnummerA
-import no.nav.helse.WiremockWrapper.gyldigFodselsnummerB
 import no.nav.helse.aktoer.AktoerId
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
+import no.nav.helse.dusseldorf.ktor.testsupport.jws.NaisSts
+import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.mottak.v1.*
 import org.json.JSONObject
 import org.junit.AfterClass
@@ -40,18 +40,41 @@ class PleiepengesoknadMottakTest {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(PleiepengesoknadMottakTest::class.java)
 
-        private val wireMockServer: WireMockServer = WiremockWrapper.bootstrap()
+        // Se https://github.com/navikt/dusseldorf-ktor#f%C3%B8dselsnummer
+        private val gyldigFodselsnummerA = "02119970078"
+        private val gyldigFodselsnummerB = "19066672169"
+        private val gyldigFodselsnummerC = "20037473937"
+        private val dNummerA = "55125314561"
+
+        private val wireMockServer: WireMockServer = WireMockBuilder()
+            .withAzureSupport()
+            .withNaisStsSupport()
+            .build()
+            .stubPleiepengerDokumentHealth()
+            .stubLagreDokument()
+            .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerA, "1234561")
+            .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerB, "1234562")
+            .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerC, "1234563")
+            .stubAktoerRegisterGetAktoerId(dNummerA, "1234564")
+
+
         private val kafkaEnvironment = KafkaWrapper.bootstrap()
         private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
         private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
-        private val authorizedAccessToken = Authorization.getAccessToken(wireMockServer.baseUrl(), wireMockServer.getSubject())
-        private val unAauthorizedAccessToken = Authorization.getAccessToken(wireMockServer.baseUrl(), "srvikketilgang")
+
+        private val authorizedAccessToken = NaisSts.generateJwt(application = "srvpleiepengesokna")
+        private val unAauthorizedAccessToken = NaisSts.generateJwt(application = "srvnotauthorized")
 
         private var engine = newEngine(kafkaEnvironment)
 
         private fun getConfig(kafkaEnvironment: KafkaEnvironment) : ApplicationConfig {
             val fileConfig = ConfigFactory.load()
-            val testConfig = ConfigFactory.parseMap(TestConfiguration.asMap(wireMockServer = wireMockServer, kafkaEnvironment = kafkaEnvironment))
+            val testConfig = ConfigFactory.parseMap(TestConfiguration.asMap(
+                wireMockServer = wireMockServer,
+                kafkaEnvironment = kafkaEnvironment,
+                pleiepengersoknadMottakAzureClientId = "pleiepengesoknad-mottak",
+                azureAuthorizedClients = setOf("pleiepengesoknad-api")
+            ))
             val mergedConfig = testConfig.withFallback(fileConfig)
             return HoconApplicationConfig(mergedConfig)
         }
@@ -99,6 +122,12 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Gyldig søknad blir lagt til prosessering`() {
+        gyldigSoknadBlirLagtTilProsessering(authorizedAccessToken)
+        gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+        gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+    }
+
+    private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
         val soknad = gyldigSoknad(
             fodselsnummerSoker = gyldigFodselsnummerA,
             fodselsnummerBarn = gyldigFodselsnummerB
@@ -107,7 +136,8 @@ class PleiepengesoknadMottakTest {
         val soknadId = requestAndAssert(
             soknad = soknad,
             expectedCode = HttpStatusCode.Accepted,
-            expectedResponse = null
+            expectedResponse = null,
+            accessToken = accessToken
         )
 
         val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)

@@ -1,23 +1,22 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+val dusseldorfKtorVersion = "1.2.3.5379667"
 val ktorVersion = ext.get("ktorVersion").toString()
-val dusseldorfKtorVersion = "1.2.2.8f413ad"
-val kafkaEmbeddedEnvVersion = "2.1.1"
-val kafkaVersion = "2.0.1" // Aliigned med version fra kafka-embedded-env
-val wiremockVersion = "2.19.0"
+val kafkaEmbeddedEnvVersion = "2.2.0"
+val kafkaVersion = "2.3.0" // Alligned med version fra kafka-embedded-env
 
 val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
 
 plugins {
-    kotlin("jvm") version "1.3.40"
+    kotlin("jvm") version "1.3.41"
     id("com.github.johnrengelman.shadow") version "5.1.0"
 }
 
 
 buildscript {
-    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/8f413ad909a79e6f5e5897f43f009152ab2f0f35/gradle/dusseldorf-ktor.gradle.kts")
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/53796676e0d12719558795ed05fc6cd672c3a8ac/gradle/dusseldorf-ktor.gradle.kts")
 }
 
 
@@ -45,13 +44,12 @@ dependencies {
     compile("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     // Test
-    testCompile ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
-    testCompile("no.nav.security:oidc-test-support:0.2.18")
-    testCompile ("com.github.tomakehurst:wiremock:$wiremockVersion")
-    testCompile("io.ktor:ktor-server-test-host:$ktorVersion") {
+    testCompile  ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
+    testCompile ( "no.nav.helse:dusseldorf-ktor-test-support:$dusseldorfKtorVersion")
+    testCompile ( "io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testCompile("org.skyscreamer:jsonassert:1.5.0")
+    testCompile( "org.skyscreamer:jsonassert:1.5.0")
 }
 
 java {
@@ -78,5 +76,5 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "5.5"
+    gradleVersion = "5.5.1"
 }

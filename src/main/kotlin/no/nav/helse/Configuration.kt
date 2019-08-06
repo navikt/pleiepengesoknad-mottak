@@ -5,6 +5,7 @@ import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.dusseldorf.ktor.auth.*
 import no.nav.helse.dusseldorf.ktor.core.getOptionalList
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
+import no.nav.helse.dusseldorf.ktor.core.getRequiredList
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
 import no.nav.helse.kafka.KafkaConfig
 import java.net.URI
@@ -20,17 +21,17 @@ data class Configuration(private val config : ApplicationConfig) {
         if (issuers.isEmpty()) throw IllegalStateException("Må konfigureres opp minst en issuer.")
     }
 
-
-    private fun getAuthorizedSystemsForRestApi(): List<String> {
+    private fun getNaisStsAuthorizedClients(): List<String> {
         return config.getOptionalList(
-            key = "nav.rest_api.authorized_systems",
-            builder = { value -> value},
+            key = "nav.auth.nais-sts.authorized_clients",
+            builder = { value -> value },
             secret = false
         )
     }
-    fun issuers(): Map<Issuer, Set<ClaimRule>> {
+
+    internal fun issuers(): Map<Issuer, Set<ClaimRule>> {
         return config.issuers().withAdditionalClaimRules(
-            mapOf(NAIS_STS_ALIAS to setOf(StandardClaimRules.Companion.EnforceSubjectOneOf(getAuthorizedSystemsForRestApi().toSet())))
+            mapOf(NAIS_STS_ALIAS to setOf(StandardClaimRules.Companion.EnforceSubjectOneOf(getNaisStsAuthorizedClients().toSet())))
         )
     }
     internal fun getAktoerRegisterBaseUrl() = URI(config.getRequiredString("nav.aktoer_register_base_url", secret = false))
@@ -48,4 +49,8 @@ data class Configuration(private val config : ApplicationConfig) {
             trustStore = trustStore
         )
     }
+
+    private fun getScopesFor(operation: String) = config.getRequiredList("nav.auth.scopes.$operation", secret = false, builder = { it }).toSet()
+    internal fun getLagreDokumentScopes() = getScopesFor("lagre-dokument")
+
 }

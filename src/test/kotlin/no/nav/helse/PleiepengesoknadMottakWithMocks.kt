@@ -1,25 +1,36 @@
 package no.nav.helse
 
 import io.ktor.server.testing.withApplication
+import no.nav.helse.dusseldorf.ktor.testsupport.asArguments
+import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-private val logger: Logger = LoggerFactory.getLogger("no.nav.PleiepengesoknadMottakWithMocks")
 
 class PleiepengesoknadMottakWithMocks {
     companion object {
+        private val logger: Logger = LoggerFactory.getLogger(PleiepengesoknadMottakWithMocks::class.java)
+
 
         @JvmStatic
         fun main(args: Array<String>) {
 
-            val wireMockServer = WiremockWrapper.bootstrap(port = 8141)
+            val wireMockServer = WireMockBuilder()
+                .withPort(8141)
+                .withAzureSupport()
+                .withNaisStsSupport()
+                .build()
+                .stubPleiepengerDokumentHealth()
+                .stubLagreDokument()
+                .stubAktoerRegisterGetAktoerId("02119970078", "1234561")
+
             val kafkaEnvironment = KafkaWrapper.bootstrap()
 
-            val testArgs = TestConfiguration.asArray(TestConfiguration.asMap(
+            val testArgs = TestConfiguration.asMap(
                 wireMockServer = wireMockServer,
                 kafkaEnvironment = kafkaEnvironment,
                 port = 8142
-            ))
+            ).asArguments()
 
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
