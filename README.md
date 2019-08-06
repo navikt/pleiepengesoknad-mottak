@@ -1,5 +1,7 @@
 # pleiepengesoknad-mottak
 
+[![CircleCI](https://circleci.com/gh/navikt/pleiepengesoknad-mottak/tree/master.svg?style=svg)](https://circleci.com/gh/navikt/pleiepengesoknad-mottak/tree/master)
+
 Tjeneste som tar imot søknader om pleiepenger og legger de til til prosessering.
 Mottar søknad som REST API-kall. Legges videre på en Kafka Topic som tjenesten [pleiepengesoknad-prosessering](https://github.com/navikt/pleiepengesoknad-prosessering) prosesserer.
 
@@ -117,5 +119,7 @@ Request ID blir ikke propagert videre, og skal ha sitt opphav hos konsumenten om
 - Request ID kan sendes som heder 'X-Request-ID'
 - Versjon på meldingen avledes fra pathen '/v1/soknad' -> 1
 
-## For NAV-ansatte
-Interne henvendelser kan sendes via Slack i kanalen #team-düsseldorf
+## Henvendelser
+Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
+
+Interne henvendelser kan sendes via Slack i kanalen #team-düsseldorf.
