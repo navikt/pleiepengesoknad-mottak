@@ -29,7 +29,7 @@ internal class SoknadV1MottakService(
         val correlationId = CorrelationId(metadata.correlationId)
         logger.trace("Henter aktørID")
         val aktoerId = aktoerGateway.getAktoerId(
-            ident = Ident(soknad.soker.fodselsnummer),
+            ident = Ident(soknad.sokerFodselsNummer),
             correlationId = correlationId
         )
 
@@ -40,15 +40,16 @@ internal class SoknadV1MottakService(
             correlationId = correlationId
         )
 
+        val outgoing = soknad
+            .medSokerAktoerId(aktoerId)
+            .medVedleggUrls(vedleggUrls)
+            .medSoknadId(soknadId)
+            .somOutgoing()
+
         logger.trace("Legger på kø")
         soknadV1KafkaProducer.produce(
             metadata = metadata,
-            soknad = SoknadV1Outgoing(
-                soknadId = soknadId,
-                incoming = soknad,
-                aktoerId = aktoerId,
-                vedleggUrls = vedleggUrls
-            )
+            soknad = outgoing
         )
 
         return soknadId

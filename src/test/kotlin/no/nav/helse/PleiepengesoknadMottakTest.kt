@@ -14,20 +14,19 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.common.KafkaEnvironment
-import no.nav.helse.aktoer.AktoerId
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.NaisSts
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.mottak.v1.*
+import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.skyscreamer.jsonassert.JSONAssert
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -129,8 +128,7 @@ class PleiepengesoknadMottakTest {
 
     private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA,
-            fodselsnummerBarn = gyldigFodselsnummerB
+            fodselsnummerSoker = gyldigFodselsnummerA
         )
 
         val soknadId = requestAndAssert(
@@ -140,18 +138,17 @@ class PleiepengesoknadMottakTest {
             accessToken = accessToken
         )
 
-        val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
+        val sendtTilProsessering = hentSoknadSendtTilProsessering(soknadId)
         verifiserSoknadLagtTilProsessering(
-            incoming = soknad,
-            outgoing = sendtTilProsessering
+            incomingJsonString = soknad,
+            outgoingJsonObject = sendtTilProsessering
         )
     }
 
     @Test
     fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = dNummerA,
-            fodselsnummerBarn = gyldigFodselsnummerB
+            fodselsnummerSoker = dNummerA
         )
 
         val soknadId = requestAndAssert(
@@ -162,16 +159,15 @@ class PleiepengesoknadMottakTest {
 
         val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
         verifiserSoknadLagtTilProsessering(
-            incoming = soknad,
-            outgoing = sendtTilProsessering
+            incomingJsonString = soknad,
+            outgoingJsonObject = sendtTilProsessering
         )
     }
 
     @Test
     fun `Request fra ikke autorisert system feiler`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA,
-            fodselsnummerBarn = gyldigFodselsnummerB
+            fodselsnummerSoker = gyldigFodselsnummerA
         )
 
         requestAndAssert(
@@ -193,8 +189,7 @@ class PleiepengesoknadMottakTest {
     @Test
     fun `Request uten corelation id feiler`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA,
-            fodselsnummerBarn = gyldigFodselsnummerB
+            fodselsnummerSoker = gyldigFodselsnummerA
         )
 
         requestAndAssert(
@@ -223,48 +218,16 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `En ugyldig melding gir valideringsfeil`() {
-        val fraOgMedString = "2019-04-02"
-        val tilOgMedString = "2019-04-01"
-        val gyldigOrgnr = "917755736"
-        val kortOrgnr = "123456"
-        val ugyldigOrgnr = "987654321"
-        val fodselsnummerSoker = "290990123451"
-        val fodselsnummerBarn = "29099054321"
-        val alternativIdBarn = "123F"
+        val ugyldigFnr = "290990123451"
+        val soknad = """
+        {
+            "soker": {
+                "fodselsnummer": "$ugyldigFnr"
+            },
+            vedlegg: []
+        }
+        """.trimIndent()
 
-        val soknad = SoknadV1Incoming(
-            mottatt = ZonedDateTime.now(),
-            fraOgMed = LocalDate.parse(fraOgMedString),
-            tilOgMed = LocalDate.parse(tilOgMedString),
-            soker = SokerIncoming(
-                fodselsnummer = fodselsnummerSoker,
-                etternavn = "Nordmann",
-                mellomnavn = "Mellomnavn",
-                fornavn = "Ola"
-            ),
-            barn = Barn(
-                navn = "Kari",
-                fodselsnummer = fodselsnummerBarn,
-                alternativId = alternativIdBarn
-            ),
-            relasjonTilBarnet = "Mor",
-            arbeidsgivere = Arbeidsgivere(
-                organisasjoner = listOf(
-                    Organisasjon(gyldigOrgnr, "Gyldig"),
-                    Organisasjon(kortOrgnr, "ForKort"),
-                    Organisasjon(ugyldigOrgnr, "Ugyldig")
-                )
-            ),
-            vedlegg = listOf(),
-            medlemskap = Medlemskap(
-                harBoddIUtlandetSiste12Mnd = true,
-                skalBoIUtlandetNeste12Mnd = true
-            ),
-            harMedsoker = true,
-            grad = 120,
-            harBekreftetOpplysninger = false,
-            harForstattRettigheterOgPlikter = false
-        )
         requestAndAssert(
             soknad = soknad,
             expectedCode = HttpStatusCode.BadRequest,
@@ -284,52 +247,7 @@ class PleiepengesoknadMottakTest {
                         "type": "entity",
                         "name": "soker.fodselsnummer",
                         "reason": "Ikke gyldig fødselsnummer.",
-                        "invalid_value": "$fodselsnummerSoker"
-                    }, {
-                        "type": "entity",
-                        "name": "barn.fodselsnummer",
-                        "reason": "Ikke gyldig fødselsnummer.",
-                        "invalid_value": "$fodselsnummerBarn"
-                    }, {
-                        "type": "entity",
-                        "name": "barn.alternativ_id",
-                        "reason": "Ikke gyldig alternativ id. Kan kun inneholde tall.",
-                        "invalid_value": "$alternativIdBarn"
-                    }, {
-                        "type": "entity",
-                        "name": "arbeidsgivere.organisasjoner[1].organisasjonsnummer",
-                        "reason": "Ikke gyldig organisasjonsnummer.",
-                        "invalid_value": "$kortOrgnr"
-                    }, {
-                        "type": "entity",
-                        "name": "arbeidsgivere.organisasjoner[2].organisasjonsnummer",
-                        "reason": "Ikke gyldig organisasjonsnummer.",
-                        "invalid_value": "$ugyldigOrgnr"
-                    },{
-                        "type": "entity",
-                        "name": "har_bekreftet_opplysninger",
-                        "reason": "Opplysningene må bekreftes for å legge søknad til prosessering.",
-                        "invalid_value": false
-                    },{
-                        "type": "entity",
-                        "name": "har_forstatt_rettigheter_og_plikter",
-                        "reason": "Må ha forstått rettigheter og plikter for å legge søknad til prosessering.",
-                        "invalid_value": false
-                    },{
-                        "type": "entity",
-                        "name": "grad",
-                        "reason": "Grad må være mellom 20 og 100.",
-                        "invalid_value": 120
-                    },{
-                        "type": "entity",
-                        "name": "fra_og_med",
-                        "reason": "Fra og med må være før eller lik til og med.",
-                        "invalid_value": "$fraOgMedString"
-                    }, {
-                        "type": "entity",
-                        "name": "til_og_med",
-                        "reason": "Til og med må være etter eller lik fra og med.",
-                        "invalid_value": "$tilOgMedString"
+                        "invalid_value": "$ugyldigFnr"
                     }]
                 }
             """.trimIndent()
@@ -338,21 +256,22 @@ class PleiepengesoknadMottakTest {
 
     // Utils
     private fun verifiserSoknadLagtTilProsessering(
-        incoming: SoknadV1Incoming,
-        outgoing: SoknadV1Outgoing
+        incomingJsonString: String,
+        outgoingJsonObject: JSONObject
     ) {
-        val outgoingFromIncoming = SoknadV1Outgoing(
-            incoming = incoming,
-            aktoerId = AktoerId(outgoing.soker.aktoerId),
-            soknadId = SoknadId(outgoing.soknadId),
-            vedleggUrls = outgoing.vedleggUrls
-        )
+        val outgoing = SoknadV1Outgoing(outgoingJsonObject)
 
-        assertEquals(outgoingFromIncoming, outgoing)
+        val outgoingFromIncoming = SoknadV1Incoming(incomingJsonString)
+            .medSokerAktoerId(outgoing.sokerAktoerId)
+            .medSoknadId(outgoing.soknadId)
+            .medVedleggUrls(outgoing.vedleggUrls)
+            .somOutgoing()
+
+        JSONAssert.assertEquals(outgoingFromIncoming.jsonObject.toString(), outgoing.jsonObject.toString(), true)
     }
 
 
-    private fun requestAndAssert(soknad : SoknadV1Incoming,
+    private fun requestAndAssert(soknad : String,
                                  expectedResponse : String?,
                                  expectedCode : HttpStatusCode,
                                  leggTilCorrelationId : Boolean = true,
@@ -369,7 +288,7 @@ class PleiepengesoknadMottakTest {
                 addHeader(HttpHeaders.ContentType, "application/json")
                 val requestEntity = objectMapper.writeValueAsString(soknad)
                 logger.info("Request Entity = $requestEntity")
-                setBody(objectMapper.writeValueAsString(soknad))
+                setBody(soknad)
             }.apply {
                 logger.info("Response Entity = ${response.content}")
                 logger.info("Expected Entity = $expectedResponse")
@@ -393,50 +312,25 @@ class PleiepengesoknadMottakTest {
 
 
     private fun gyldigSoknad(
-        fodselsnummerSoker : String,
-        fodselsnummerBarn: String,
-        vedlegg : Vedlegg = Vedlegg(
-            contentType = "image/jpeg",
-            title = "iPhone",
-            content = "iPhone_6.jpg".fromResources().readBytes()
-        )
-    ) : SoknadV1Incoming = SoknadV1Incoming(
-        mottatt = ZonedDateTime.ofInstant(
-            LocalDateTime.now(),
-            ZoneOffset.UTC,
-            ZoneId.of("UTC")
-        ),
-        fraOgMed = LocalDate.now(),
-        tilOgMed = LocalDate.now().plusWeeks(1),
-        soker = SokerIncoming(
-            fodselsnummer = fodselsnummerSoker,
-            etternavn = "Nordmann",
-            mellomnavn = "Mellomnavn",
-            fornavn = "Ola"
-        ),
-        barn = Barn(
-            navn = "Kari",
-            fodselsnummer = fodselsnummerBarn,
-            alternativId = null
-        ),
-        relasjonTilBarnet = "Mor",
-        arbeidsgivere = Arbeidsgivere(
-            organisasjoner = listOf(
-                Organisasjon("917755736", "Gyldig")
-            )
-        ),
-        vedlegg = listOf(vedlegg),
-        medlemskap = Medlemskap(
-            harBoddIUtlandetSiste12Mnd = true,
-            skalBoIUtlandetNeste12Mnd = true
-        ),
-        harMedsoker = true,
-        grad = 70,
-        harBekreftetOpplysninger = true,
-        harForstattRettigheterOgPlikter = true
-    )
+        fodselsnummerSoker : String
+    ) : String =
+        """
+        {
+            "soker": {
+                "fodselsnummer": "$fodselsnummerSoker"
+            },
+            vedlegg: [{
+                "content": "${Base64.encodeBase64String("iPhone_6.jpg".fromResources().readBytes())}",
+                "content_type": "image/jpeg",
+                "title": "Et fint bilde"
+            }],
+            "hvilke_som_helst_andre_atributter": {
+                "enabled": true
+            }
+        }
+        """.trimIndent()
 
-    private fun hentSoknadSendtTilProsessering(soknadId: String?) : SoknadV1Outgoing {
+    private fun hentSoknadSendtTilProsessering(soknadId: String?) : JSONObject {
         assertNotNull(soknadId)
         return kafkaTestConsumer.hentSoknad(soknadId).data
     }

@@ -1,19 +1,16 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.kafka.TopicEntry
 import no.nav.helse.kafka.Topics
-import no.nav.helse.mottak.v1.SoknadV1Outgoing
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.json.JSONObject
 import java.time.Duration
 import kotlin.test.assertEquals
 
@@ -45,8 +42,8 @@ private fun KafkaEnvironment.testConsumerProperties() : MutableMap<String, Any>?
     }
 }
 
-internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<SoknadV1Outgoing>> {
-    val consumer = KafkaConsumer<String, TopicEntry<SoknadV1Outgoing>>(
+internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<JSONObject>> {
+    val consumer = KafkaConsumer<String, TopicEntry<JSONObject>>(
         testConsumerProperties(),
         StringDeserializer(),
         SoknadV1OutgoingDeserialiser()
@@ -55,10 +52,10 @@ internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<
     return consumer
 }
 
-internal fun KafkaConsumer<String, TopicEntry<SoknadV1Outgoing>>.hentSoknad(
+internal fun KafkaConsumer<String, TopicEntry<JSONObject>>.hentSoknad(
     soknadId: String,
     maxWaitInSeconds: Long = 20
-) : TopicEntry<SoknadV1Outgoing> {
+) : TopicEntry<JSONObject> {
     val end = System.currentTimeMillis() + Duration.ofSeconds(maxWaitInSeconds).toMillis()
     while (System.currentTimeMillis() < end) {
         seekToBeginning(assignment())
@@ -77,10 +74,20 @@ internal fun KafkaConsumer<String, TopicEntry<SoknadV1Outgoing>>.hentSoknad(
 fun KafkaEnvironment.username() = username
 fun KafkaEnvironment.password() = password
 
-private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<SoknadV1Outgoing>> {
-    private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
+private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<JSONObject>> {
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
-    override fun deserialize(topic: String, data: ByteArray): TopicEntry<SoknadV1Outgoing> = objectMapper.readValue(data)
+    override fun deserialize(topic: String, data: ByteArray): TopicEntry<JSONObject> {
+        val json = JSONObject(String(data))
+        val metadata = json.getJSONObject("metadata")
+        return TopicEntry(
+            metadata = Metadata(
+                version = metadata.getInt("version"),
+                correlationId = metadata.getString("correlation_id"),
+                requestId = metadata.getString("request_id")
+            ),
+            data = json.getJSONObject("data")
+        )
+    }
     override fun close() {}
 
 }

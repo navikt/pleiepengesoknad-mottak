@@ -6,7 +6,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.ApplicationRequest
 import io.ktor.request.header
-import io.ktor.request.receive
+import io.ktor.request.receiveText
 import io.ktor.response.ApplicationResponse
 import io.ktor.response.respond
 import io.ktor.routing.Route
@@ -15,7 +15,7 @@ import no.nav.helse.Metadata
 import no.nav.helse.getSoknadId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
+import validate
 
 private val logger: Logger = LoggerFactory.getLogger("no.nav.SoknadV1Api")
 
@@ -35,11 +35,10 @@ internal fun Route.SoknadV1Api(
     }
 }
 
-
 private suspend fun ApplicationCall.soknad() : SoknadV1Incoming {
-    val soknad = receive<SoknadV1Incoming>()
-    soknad.validate()
-    return soknad
+    val incoming = SoknadV1Incoming(receiveText())
+    incoming.validate()
+    return incoming
 }
 
 private fun ApplicationCall.metadata() = Metadata(
