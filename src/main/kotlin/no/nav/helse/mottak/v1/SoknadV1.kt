@@ -1,117 +1,78 @@
 package no.nav.helse.mottak.v1
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.helse.SoknadId
 import no.nav.helse.aktoer.AktoerId
+import org.apache.commons.codec.binary.Base64
+import org.json.JSONObject
 import java.net.URI
-import java.time.LocalDate
-import java.time.ZonedDateTime
 
-data class SoknadV1Incoming(
-    val mottatt: ZonedDateTime,
-    val fraOgMed : LocalDate,
-    val tilOgMed : LocalDate,
-    val soker : SokerIncoming,
-    val barn : Barn,
-    val relasjonTilBarnet : String,
-    val arbeidsgivere: Arbeidsgivere,
-    var vedlegg : List<Vedlegg> = listOf(),
-    val medlemskap: Medlemskap,
-    val grad : Int,
-    val harMedsoker : Boolean,
-    val harForstattRettigheterOgPlikter : Boolean,
-    val harBekreftetOpplysninger : Boolean
-)
-
-data class SoknadV1Outgoing (
-    val soknadId : String,
-    val mottatt: ZonedDateTime,
-    val fraOgMed : LocalDate,
-    val tilOgMed : LocalDate,
-    val soker : SokerOutgoing,
-    val barn : Barn,
-    val relasjonTilBarnet : String,
-    val arbeidsgivere: Arbeidsgivere,
-    var vedleggUrls : List<URI> = listOf(),
-    val medlemskap: Medlemskap,
-    val grad : Int,
-    val harMedsoker : Boolean,
-    val harForstattRettigheterOgPlikter : Boolean,
-    val harBekreftetOpplysninger : Boolean
-) {
-    constructor(
-        incoming: SoknadV1Incoming,
-        aktoerId: AktoerId,
-        soknadId: SoknadId,
-        vedleggUrls: List<URI>
-    ) : this(
-        soknadId = soknadId.id,
-        mottatt = incoming.mottatt,
-        fraOgMed = incoming.fraOgMed,
-        tilOgMed = incoming.tilOgMed,
-        soker = SokerOutgoing(
-            incoming = incoming.soker,
-            aktoerId = aktoerId
-        ),
-        barn = incoming.barn,
-        relasjonTilBarnet = incoming.relasjonTilBarnet,
-        arbeidsgivere = incoming.arbeidsgivere,
-        vedleggUrls = vedleggUrls,
-        medlemskap = incoming.medlemskap,
-        grad = incoming.grad,
-        harMedsoker = incoming.harMedsoker,
-        harForstattRettigheterOgPlikter = incoming.harForstattRettigheterOgPlikter,
-        harBekreftetOpplysninger = incoming.harBekreftetOpplysninger
-    )
+private object JsonKeys {
+    internal const val vedlegg = "vedlegg"
+    internal const val soker = "soker"
+    internal const val aktoerId = "aktoer_id"
+    internal const val vedleggUrls = "vedlegg_urls"
+    internal const val soknadId = "soknad_id"
+    internal const val fodselsnummer = "fodselsnummer"
+    internal const val content = "content"
+    internal const val contentType = "content_type"
+    internal const val title = "title"
 }
 
-data class SokerIncoming(
-    val fodselsnummer: String,
-    val fornavn: String,
-    val mellomnavn: String?,
-    val etternavn: String
-)
+internal class SoknadV1Incoming(json: String) {
+    private val jsonObject = JSONObject(json)
+    internal val sokerFodselsNummer : String
+    internal val vedlegg: List<Vedlegg>
 
-data class SokerOutgoing(
-    val aktoerId: String,
-    val fodselsnummer: String,
-    val fornavn: String,
-    val mellomnavn: String?,
-    val etternavn: String
-) {
-    constructor(
-        incoming: SokerIncoming,
-        aktoerId: AktoerId
-    ) : this(
-        aktoerId = aktoerId.id,
-        fodselsnummer = incoming.fodselsnummer,
-        fornavn = incoming.fornavn,
-        mellomnavn = incoming.mellomnavn,
-        etternavn = incoming.etternavn
-    )
+    private fun hentVedlegg() : List<Vedlegg> {
+        val vedlegg = mutableListOf<Vedlegg>()
+        jsonObject.getJSONArray(JsonKeys.vedlegg).forEach {
+            val vedleggJson = it as JSONObject
+            vedlegg.add(Vedlegg(
+                content = Base64.decodeBase64(vedleggJson.getString(JsonKeys.content)),
+                contentType = vedleggJson.getString(JsonKeys.contentType),
+                title = vedleggJson.getString(JsonKeys.title)
+            ))
+        }
+        return vedlegg.toList()
+    }
+
+    init {
+        sokerFodselsNummer = jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.fodselsnummer)
+        vedlegg = hentVedlegg()
+        jsonObject.remove(JsonKeys.vedlegg)
+    }
+
+    internal fun medSokerAktoerId(aktoerId: AktoerId) : SoknadV1Incoming {
+        jsonObject.getJSONObject(JsonKeys.soker).put(JsonKeys.aktoerId, aktoerId.id)
+        return this
+    }
+
+    internal fun medVedleggUrls(vedleggUrls: List<URI>) : SoknadV1Incoming {
+        jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
+        return this
+    }
+
+    internal fun medSoknadId(soknadId: SoknadId) : SoknadV1Incoming {
+        jsonObject.put(JsonKeys.soknadId, soknadId.id)
+        return this
+    }
+
+    internal fun somOutgoing() = SoknadV1Outgoing(jsonObject)
+
 }
 
-data class Barn(
-    val fodselsnummer: String?,
-    val navn : String?,
-    val alternativId: String?
-)
-
-data class Arbeidsgivere(
-    val organisasjoner : List<Organisasjon>
-)
-
-data class Organisasjon(
-    val organisasjonsnummer: String,
-    val navn: String?
-)
-
-data class Medlemskap(
-    @JsonProperty("har_bodd_i_utlandet_siste_12_mnd")
-    val harBoddIUtlandetSiste12Mnd : Boolean,
-    @JsonProperty("skal_bo_i_utlandet_neste_12_mnd")
-    val skalBoIUtlandetNeste12Mnd : Boolean
-)
+internal class SoknadV1Outgoing(internal val jsonObject: JSONObject) {
+    internal val soknadId = SoknadId(jsonObject.getString(JsonKeys.soknadId))
+    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.aktoerId))
+    internal val vedleggUrls = hentVedleggUrls()
+    private fun hentVedleggUrls() : List<URI> {
+        val vedleggUrls = mutableListOf<URI>()
+        jsonObject.getJSONArray(JsonKeys.vedleggUrls).forEach {
+            vedleggUrls.add(URI(it as String))
+        }
+        return vedleggUrls.toList()
+    }
+}
 
 data class Vedlegg (
     val content : ByteArray,
