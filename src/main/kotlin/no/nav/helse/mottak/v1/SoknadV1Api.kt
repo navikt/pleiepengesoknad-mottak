@@ -6,7 +6,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.ApplicationRequest
 import io.ktor.request.header
-import io.ktor.request.receiveText
+import io.ktor.request.receiveChannel
+import io.ktor.request.receiveStream
 import io.ktor.response.ApplicationResponse
 import io.ktor.response.respond
 import io.ktor.routing.Route
@@ -36,7 +37,8 @@ internal fun Route.SoknadV1Api(
 }
 
 private suspend fun ApplicationCall.soknad() : SoknadV1Incoming {
-    val incoming = SoknadV1Incoming(receiveText())
+    val json = receiveStream().use { String(it.readAllBytes(), Charsets.UTF_8) }
+    val incoming = SoknadV1Incoming(json)
     incoming.validate()
     return incoming
 }

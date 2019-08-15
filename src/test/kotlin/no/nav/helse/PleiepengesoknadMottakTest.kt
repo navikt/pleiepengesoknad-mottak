@@ -120,7 +120,6 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Gyldig søknad blir lagt til prosessering`() {
-        gyldigSoknadBlirLagtTilProsessering(authorizedAccessToken)
         gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
         gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
     }
@@ -324,7 +323,8 @@ class PleiepengesoknadMottakTest {
                 "title": "Et fint bilde"
             }],
             "hvilke_som_helst_andre_atributter": {
-                "enabled": true
+                "enabled": true,
+                "norsk": "Sære Åreknuter"
             }
         }
         """.trimIndent()
