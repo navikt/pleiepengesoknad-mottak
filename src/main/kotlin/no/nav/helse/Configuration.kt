@@ -3,14 +3,11 @@ package no.nav.helse
 import io.ktor.config.ApplicationConfig
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.dusseldorf.ktor.auth.*
-import no.nav.helse.dusseldorf.ktor.core.getOptionalList
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredList
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
 import no.nav.helse.kafka.KafkaConfig
 import java.net.URI
-
-private const val NAIS_STS_ALIAS = "nais-sts"
 
 @KtorExperimentalAPI
 data class Configuration(private val config : ApplicationConfig) {
@@ -21,19 +18,7 @@ data class Configuration(private val config : ApplicationConfig) {
         if (issuers.isEmpty()) throw IllegalStateException("Må konfigureres opp minst en issuer.")
     }
 
-    private fun getNaisStsAuthorizedClients(): List<String> {
-        return config.getOptionalList(
-            key = "nav.auth.nais-sts.authorized_clients",
-            builder = { value -> value },
-            secret = false
-        )
-    }
-
-    internal fun issuers(): Map<Issuer, Set<ClaimRule>> {
-        return config.issuers().withAdditionalClaimRules(
-            mapOf(NAIS_STS_ALIAS to setOf(StandardClaimRules.Companion.EnforceSubjectOneOf(getNaisStsAuthorizedClients().toSet())))
-        )
-    }
+    internal fun issuers() = issuers.withoutAdditionalClaimRules()
     internal fun getAktoerRegisterBaseUrl() = URI(config.getRequiredString("nav.aktoer_register_base_url", secret = false))
     internal fun getPleiepengerDokumentBaseUrl() = URI(config.getRequiredString("nav.pleiepenger_dokument_base_url", secret = false))
     internal fun getKafkaConfig() = config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->

@@ -17,7 +17,6 @@ import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
-import no.nav.helse.dusseldorf.ktor.testsupport.jws.NaisSts
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.mottak.v1.*
 import org.apache.commons.codec.binary.Base64
@@ -61,8 +60,8 @@ class PleiepengesoknadMottakTest {
         private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
         private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
 
-        private val authorizedAccessToken = NaisSts.generateJwt(application = "srvpleiepengesokna")
-        private val unAauthorizedAccessToken = NaisSts.generateJwt(application = "srvnotauthorized")
+        private val authorizedAccessToken = Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak")
+        private val unAauthorizedAccessToken = Azure.V2_0.generateJwt(clientId = "ikke-authorized-client", audience = "pleiepengesoknad-mottak")
 
         private var engine = newEngine(kafkaEnvironment)
 

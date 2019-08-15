@@ -44,8 +44,6 @@ spec:
       value: https://app-q1.adeo.no/aktoerregister
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
-    - name: NAIS_STS_AUTHORIZED_CLIENTS
-      value: srvpleiepengesokna
     - name: AZURE_CLIENT_ID
       value: 8caa7c32-1523-43a7-af95-63123938f45c
     - name: AZURE_AUTHORIZED_CLIENTS

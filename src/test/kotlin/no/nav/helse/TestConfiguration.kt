@@ -49,26 +49,20 @@ object TestConfiguration {
             map["nav.auth.scopes.lagre-dokument"] = "pleiepenger-dokument/.default"
         }
 
-        // Issuers
         if (wireMockServer != null) {
-            map["nav.auth.issuers.0.alias"] = "nais-sts"
-            map["nav.auth.issuers.0.discovery_endpoint"] = wireMockServer.getNaisStsWellKnownUrl()
-            map["nav.auth.nais-sts.authorized_clients"] = naisStsAuthoriedClients.joinToString(", ")
-        }
-        if (wireMockServer != null) {
+            map["nav.auth.issuers.0.type"] = "azure"
+            map["nav.auth.issuers.0.alias"] = "azure-v1"
+            map["nav.auth.issuers.0.discovery_endpoint"] = wireMockServer.getAzureV1WellKnownUrl()
+            map["nav.auth.issuers.0.audience"] = pleiepengersoknadMottakAzureClientId
+            map["nav.auth.issuers.0.azure.require_certificate_client_authentication"] = "true"
+            map["nav.auth.issuers.0.azure.authorized_clients"] = azureAuthorizedClients.joinToString(",")
+
             map["nav.auth.issuers.1.type"] = "azure"
-            map["nav.auth.issuers.1.alias"] = "azure-v1"
-            map["nav.auth.issuers.1.discovery_endpoint"] = wireMockServer.getAzureV1WellKnownUrl()
+            map["nav.auth.issuers.1.alias"] = "azure-v2"
+            map["nav.auth.issuers.1.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
             map["nav.auth.issuers.1.audience"] = pleiepengersoknadMottakAzureClientId
             map["nav.auth.issuers.1.azure.require_certificate_client_authentication"] = "true"
             map["nav.auth.issuers.1.azure.authorized_clients"] = azureAuthorizedClients.joinToString(",")
-
-            map["nav.auth.issuers.2.type"] = "azure"
-            map["nav.auth.issuers.2.alias"] = "azure-v2"
-            map["nav.auth.issuers.2.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
-            map["nav.auth.issuers.2.audience"] = pleiepengersoknadMottakAzureClientId
-            map["nav.auth.issuers.2.azure.require_certificate_client_authentication"] = "true"
-            map["nav.auth.issuers.2.azure.authorized_clients"] = azureAuthorizedClients.joinToString(",")
         }
 
         return map.toMap()
