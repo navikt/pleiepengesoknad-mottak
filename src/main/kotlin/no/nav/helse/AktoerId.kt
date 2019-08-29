@@ -1,3 +1,3 @@
-package no.nav.helse.aktoer
+package no.nav.helse
 
 data class AktoerId(val id: String)

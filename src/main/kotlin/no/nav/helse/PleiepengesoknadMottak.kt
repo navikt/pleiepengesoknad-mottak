@@ -15,7 +15,6 @@ import io.ktor.routing.Routing
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import no.nav.helse.aktoer.AktoerGateway
 import no.nav.helse.auth.AccessTokenClientResolver
 import no.nav.helse.dokument.DokumentGateway
 import no.nav.helse.dusseldorf.ktor.auth.*
@@ -105,18 +104,12 @@ fun Application.pleiepengesoknadMottak() {
         lagreDokumentScopes = configuration.getLagreDokumentScopes()
     )
 
-    val aktoerGateway = AktoerGateway(
-        accessTokenClient = accessTokenClientResolver.aktoerRegisterAccessTokenClient(),
-        baseUrl = configuration.getAktoerRegisterBaseUrl()
-    )
-
     install(Routing) {
         HealthRoute(
             healthService = HealthService(
                 healthChecks = setOf(
                     soknadV1KafkaProducer,
                     dokumentGateway,
-                    aktoerGateway,
                     HttpRequestHealthCheck(issuers.healthCheckMap(mutableMapOf(
                         Url.healthURL(configuration.getPleiepengerDokumentBaseUrl()) to HttpRequestHealthConfig(expectedStatus = HttpStatusCode.OK)
                     )))
@@ -130,7 +123,6 @@ fun Application.pleiepengesoknadMottak() {
                 SoknadV1Api(
                     soknadV1MottakService = SoknadV1MottakService(
                         dokumentGateway = dokumentGateway,
-                        aktoerGateway = aktoerGateway,
                         soknadV1KafkaProducer = soknadV1KafkaProducer
                     )
                 )

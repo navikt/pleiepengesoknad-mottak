@@ -1,7 +1,7 @@
 package no.nav.helse.mottak.v1
 
 import no.nav.helse.SoknadId
-import no.nav.helse.aktoer.AktoerId
+import no.nav.helse.AktoerId
 import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import java.net.URI
@@ -42,10 +42,7 @@ internal class SoknadV1Incoming(json: String) {
         jsonObject.remove(JsonKeys.vedlegg)
     }
 
-    internal fun medSokerAktoerId(aktoerId: AktoerId) : SoknadV1Incoming {
-        jsonObject.getJSONObject(JsonKeys.soker).put(JsonKeys.aktoerId, aktoerId.id)
-        return this
-    }
+    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.aktoerId))
 
     internal fun medVedleggUrls(vedleggUrls: List<URI>) : SoknadV1Incoming {
         jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
@@ -63,7 +60,6 @@ internal class SoknadV1Incoming(json: String) {
 
 internal class SoknadV1Outgoing(internal val jsonObject: JSONObject) {
     internal val soknadId = SoknadId(jsonObject.getString(JsonKeys.soknadId))
-    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.aktoerId))
     internal val vedleggUrls = hentVedleggUrls()
     private fun hentVedleggUrls() : List<URI> {
         val vedleggUrls = mutableListOf<URI>()

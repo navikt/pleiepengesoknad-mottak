@@ -3,9 +3,7 @@ package no.nav.helse.mottak.v1
 import no.nav.helse.CorrelationId
 import no.nav.helse.Metadata
 import no.nav.helse.SoknadId
-import no.nav.helse.aktoer.AktoerGateway
-import no.nav.helse.aktoer.AktoerId
-import no.nav.helse.aktoer.Ident
+import no.nav.helse.AktoerId
 import no.nav.helse.dokument.Dokument
 import no.nav.helse.dokument.DokumentGateway
 import org.slf4j.LoggerFactory
@@ -13,7 +11,6 @@ import java.net.URI
 
 internal class SoknadV1MottakService(
     private val dokumentGateway: DokumentGateway,
-    private val aktoerGateway: AktoerGateway,
     private val soknadV1KafkaProducer: SoknadV1KafkaProducer
 ) {
 
@@ -27,21 +24,15 @@ internal class SoknadV1MottakService(
         soknad: SoknadV1Incoming
     ) : SoknadId {
         val correlationId = CorrelationId(metadata.correlationId)
-        logger.trace("Henter aktørID")
-        val aktoerId = aktoerGateway.getAktoerId(
-            ident = Ident(soknad.sokerFodselsNummer),
-            correlationId = correlationId
-        )
 
         logger.trace("Lagrer vedlegg")
         val vedleggUrls = lagreVedleg(
-            aktoerId = aktoerId,
+            aktoerId = soknad.sokerAktoerId,
             vedlegg = soknad.vedlegg,
             correlationId = correlationId
         )
 
         val outgoing = soknad
-            .medSokerAktoerId(aktoerId)
             .medVedleggUrls(vedleggUrls)
             .medSoknadId(soknadId)
             .somOutgoing()
