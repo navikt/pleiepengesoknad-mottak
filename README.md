@@ -14,6 +14,7 @@ Tjenesten lagrer vedlegg slik at det kun er en referanse til vedleggene som legg
 - Gir 202 response med SøknadId som entity på formatet ```{"id":"b3106960-0a85-4e02-9221-6ae057c8e93f"}```
 - Må være gyldig JSON
 - Må inneholde soker.fodselsnummer som er et gyldig fødselsnummer/D-nummer
+- Må inneholder soker.aktoer_id som er en gyldig aktør ID
 - Må inneholde en liste vedlegg som inneholder mist et vedlegg på gyldig format
 - vedlegg[x].content må være Base64 encoded vedlegg.
 - Utover dette validerer ikke tjenesten ytterligere felter som sendes om en del av meldingen.
@@ -21,6 +22,7 @@ Tjenesten lagrer vedlegg slik at det kun er en referanse til vedleggene som legg
 ```json
 {
 	"soker": {
+        "aktoer_id": "1234567",
 		"fodselsnummer": "290990123456"
 	},
 	"vedlegg": [{
@@ -33,7 +35,6 @@ Tjenesten lagrer vedlegg slik at det kun er en referanse til vedleggene som legg
 
 ### Format på søknad lagt på kafka
 attributten "data" er tilsvarende søknaden som kommer inn i REST-API'et med noen unntak:
-- "soker.aktoer_id" er lagt til
 - "vedlegg" er byttet ut med "vedlegg_urls" som peker på vedleggene mellomlagret i [pleiepenger-dokument](https://github.com/navikt/pleiepenger-dokument)
 - "soknad_id" lagt til
 - Alle andre felter som har vært en del av JSON-meldingen som kom inn i REST-API'et vil også være en del av "data"-attributten i Kafka-meldingen.
