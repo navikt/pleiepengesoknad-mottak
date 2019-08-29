@@ -46,7 +46,6 @@ class PleiepengesoknadMottakTest {
 
         private val wireMockServer: WireMockServer = WireMockBuilder()
             .withAzureSupport()
-            .withNaisStsSupport()
             .build()
             .stubPleiepengerDokumentHealth()
             .stubLagreDokument()

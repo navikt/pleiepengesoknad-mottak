@@ -19,7 +19,6 @@ data class Configuration(private val config : ApplicationConfig) {
     }
 
     internal fun issuers() = issuers.withoutAdditionalClaimRules()
-    internal fun getAktoerRegisterBaseUrl() = URI(config.getRequiredString("nav.aktoer_register_base_url", secret = false))
     internal fun getPleiepengerDokumentBaseUrl() = URI(config.getRequiredString("nav.pleiepenger_dokument_base_url", secret = false))
     internal fun getKafkaConfig() = config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
         val trustStore = config.getOptionalString("nav.trust_store.path", secret = false)?.let { trustStorePath ->
