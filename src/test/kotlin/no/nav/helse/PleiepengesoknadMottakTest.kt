@@ -46,7 +46,6 @@ class PleiepengesoknadMottakTest {
 
         private val wireMockServer: WireMockServer = WireMockBuilder()
             .withAzureSupport()
-            .withNaisStsSupport()
             .build()
             .stubPleiepengerDokumentHealth()
             .stubLagreDokument()
@@ -220,7 +219,8 @@ class PleiepengesoknadMottakTest {
         val soknad = """
         {
             "soker": {
-                "fodselsnummer": "$ugyldigFnr"
+                "fodselsnummer": "$ugyldigFnr",
+                "aktoer_id": "ABC"
             },
             vedlegg: []
         }
@@ -246,6 +246,11 @@ class PleiepengesoknadMottakTest {
                         "name": "soker.fodselsnummer",
                         "reason": "Ikke gyldig fødselsnummer.",
                         "invalid_value": "$ugyldigFnr"
+                    }, {
+                        "type": "entity",
+                        "name": "soker.aktoer_id",
+                        "reason": "Ikke gyldig Aktør ID.",
+                        "invalid_value": "ABC"
                     }]
                 }
             """.trimIndent()
@@ -260,7 +265,6 @@ class PleiepengesoknadMottakTest {
         val outgoing = SoknadV1Outgoing(outgoingJsonObject)
 
         val outgoingFromIncoming = SoknadV1Incoming(incomingJsonString)
-            .medSokerAktoerId(outgoing.sokerAktoerId)
             .medSoknadId(outgoing.soknadId)
             .medVedleggUrls(outgoing.vedleggUrls)
             .somOutgoing()
@@ -315,7 +319,8 @@ class PleiepengesoknadMottakTest {
         """
         {
             "soker": {
-                "fodselsnummer": "$fodselsnummerSoker"
+                "fodselsnummer": "$fodselsnummerSoker",
+                "aktoer_id": "123456"
             },
             vedlegg: [{
                 "content": "${Base64.encodeBase64String("iPhone_6.jpg".fromResources().readBytes())}",

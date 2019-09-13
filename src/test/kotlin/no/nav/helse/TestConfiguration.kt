@@ -15,7 +15,6 @@ object TestConfiguration {
         port : Int = 8080,
         aktoerRegisterBaseUrl : String? = wireMockServer?.getAktoerRegisterBaseUrl(),
         pleiepeingerDokumentBaseUrl : String? = wireMockServer?.getPleiepengerDokumentBaseUrl(),
-        naisStsAuthoriedClients: Set<String> = setOf("srvpleiepengesokna"),
         pleiepengersoknadMottakAzureClientId: String = "pliepengesoknad-mottak",
         azureAuthorizedClients: Set<String> = setOf("azure-client-1", "azure-client-2","azure-client-3")
     ) : Map<String, String>{
@@ -34,18 +33,11 @@ object TestConfiguration {
 
         // Clients
         if (wireMockServer != null) {
-            map["nav.auth.clients.0.alias"] = "nais-sts"
-            map["nav.auth.clients.0.client_id"] = "srvpps-mottak"
-            map["nav.auth.clients.0.client_secret"] = "very-secret"
-            map["nav.auth.clients.0.discovery_endpoint"] = wireMockServer.getNaisStsWellKnownUrl()
-        }
-
-        if (wireMockServer != null) {
-            map["nav.auth.clients.1.alias"] = "azure-v2"
-            map["nav.auth.clients.1.client_id"] = "pleiepengesoknad-mottak"
-            map["nav.auth.clients.1.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
-            map["nav.auth.clients.1.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
-            map["nav.auth.clients.1.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
+            map["nav.auth.clients.0.alias"] = "azure-v2"
+            map["nav.auth.clients.0.client_id"] = "pleiepengesoknad-mottak"
+            map["nav.auth.clients.0.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
+            map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
+            map["nav.auth.clients.0.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
             map["nav.auth.scopes.lagre-dokument"] = "pleiepenger-dokument/.default"
         }
 

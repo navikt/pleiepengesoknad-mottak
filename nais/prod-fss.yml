@@ -40,10 +40,6 @@ spec:
   env:
     - name: PLEIEPENGER_DOKUMENT_BASE_URL
       value: https://pleiepenger-dokument.nais.adeo.no
-    - name: AKTOER_REGISTER_BASE_URL
-      value: https://app.adeo.no/aktoerregister
-    - name: NAIS_STS_DISCOVERY_ENDPOINT
-      value: https://security-token-service.nais.adeo.no/rest/v1/sts/.well-known/openid-configuration
     - name: AZURE_CLIENT_ID
       value: 4dc7783f-ee44-4707-ae5c-1d824d19f59c
     - name: AZURE_AUTHORIZED_CLIENTS

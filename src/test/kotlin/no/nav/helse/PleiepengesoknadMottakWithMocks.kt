@@ -6,7 +6,6 @@ import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-
 class PleiepengesoknadMottakWithMocks {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(PleiepengesoknadMottakWithMocks::class.java)
@@ -18,7 +17,6 @@ class PleiepengesoknadMottakWithMocks {
             val wireMockServer = WireMockBuilder()
                 .withPort(8141)
                 .withAzureSupport()
-                .withNaisStsSupport()
                 .build()
                 .stubPleiepengerDokumentHealth()
                 .stubLagreDokument()

@@ -24,6 +24,17 @@ internal fun SoknadV1Incoming.validate() {
             )
         )
     }
+    if (!sokerAktoerId.id.erKunSiffer()) {
+        violations.add(
+            Violation(
+                parameterName = "soker.aktoer_id",
+                parameterType = ParameterType.ENTITY,
+                reason = "Ikke gyldig Aktør ID.",
+                invalidValue = sokerAktoerId.id
+            )
+        )
+    }
+
     if (violations.isNotEmpty()) {
         throw Throwblem(ValidationProblemDetails(violations))
     }
