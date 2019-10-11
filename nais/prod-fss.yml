@@ -39,7 +39,7 @@ spec:
   webproxy: true
   env:
     - name: PLEIEPENGER_DOKUMENT_BASE_URL
-      value: https://pleiepenger-dokument.nais.adeo.no
+      value: https://k9-dokument.nais.adeo.no
     - name: AZURE_CLIENT_ID
       value: 4dc7783f-ee44-4707-ae5c-1d824d19f59c
     - name: AZURE_AUTHORIZED_CLIENTS
