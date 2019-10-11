@@ -38,7 +38,7 @@ spec:
     enabled: true
   webproxy: true
   env:
-    - name: PLEIEPENGER_DOKUMENT_BASE_URL
+    - name: K9_DOKUMENT_BASE_URL
       value: https://k9-dokument.nais.preprod.local
     - name: AZURE_CLIENT_ID
       value: 8caa7c32-1523-43a7-af95-63123938f45c

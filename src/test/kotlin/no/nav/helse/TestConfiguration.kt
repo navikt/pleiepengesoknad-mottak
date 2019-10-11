@@ -5,7 +5,6 @@ import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.ClientCredentials
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getAzureV1WellKnownUrl
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getAzureV2WellKnownUrl
-import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.getNaisStsWellKnownUrl
 
 object TestConfiguration {
 
@@ -14,14 +13,14 @@ object TestConfiguration {
         kafkaEnvironment: KafkaEnvironment? = null,
         port : Int = 8080,
         aktoerRegisterBaseUrl : String? = wireMockServer?.getAktoerRegisterBaseUrl(),
-        pleiepeingerDokumentBaseUrl : String? = wireMockServer?.getPleiepengerDokumentBaseUrl(),
+        k9DokumentBaseUrl : String? = wireMockServer?.getK9DokumentBaseUrl(),
         pleiepengersoknadMottakAzureClientId: String = "pliepengesoknad-mottak",
         azureAuthorizedClients: Set<String> = setOf("azure-client-1", "azure-client-2","azure-client-3")
     ) : Map<String, String>{
         val map = mutableMapOf(
             Pair("ktor.deployment.port","$port"),
             Pair("nav.aktoer_register_base_url","$aktoerRegisterBaseUrl"),
-            Pair("nav.pleiepenger_dokument_base_url","$pleiepeingerDokumentBaseUrl")
+            Pair("nav.k9_dokument_base_url","$k9DokumentBaseUrl")
         )
 
         // Kafka
@@ -38,7 +37,7 @@ object TestConfiguration {
             map["nav.auth.clients.0.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
             map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
             map["nav.auth.clients.0.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
-            map["nav.auth.scopes.lagre-dokument"] = "pleiepenger-dokument/.default"
+            map["nav.auth.scopes.lagre-dokument"] = "k9-dokument/.default"
         }
 
         if (wireMockServer != null) {

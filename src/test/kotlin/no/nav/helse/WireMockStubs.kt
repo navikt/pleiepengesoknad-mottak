@@ -6,7 +6,7 @@ import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import java.util.*
 
 private const val aktoerRegisterBasePath = "/aktoerregister-mock"
-private const val pleiepengerDokumentBasePath = "/pleiepenger-dokument-mock"
+private const val k9DokumentBasePath = "/k9-dokument-mock"
 
 internal fun WireMockServer.stubAktoerRegisterGetAktoerId(
     fnr: String,
@@ -37,10 +37,10 @@ internal fun WireMockServer.stubAktoerRegisterGetAktoerId(
 
 internal fun WireMockServer.stubLagreDokument() : WireMockServer {
     WireMock.stubFor(
-        WireMock.post(WireMock.urlPathMatching(".*$pleiepengerDokumentBasePath.*")).willReturn(
+        WireMock.post(WireMock.urlPathMatching(".*$k9DokumentBasePath.*")).willReturn(
             WireMock.aResponse()
                 .withHeader("Content-Type", "application/json")
-                .withHeader("Location", "${getPleiepengerDokumentBaseUrl()}/v1/dokument/${UUID.randomUUID()}")
+                .withHeader("Location", "${getK9DokumentBaseUrl()}/v1/dokument/${UUID.randomUUID()}")
                 .withStatus(201)
         )
     )
@@ -59,7 +59,7 @@ private fun WireMockServer.stubHealthEndpoint(
     return this
 }
 
-internal fun WireMockServer.stubPleiepengerDokumentHealth() = stubHealthEndpoint("$pleiepengerDokumentBasePath/health")
+internal fun WireMockServer.stubK9DokumentHealth() = stubHealthEndpoint("$k9DokumentBasePath/health")
 
 internal fun WireMockServer.getAktoerRegisterBaseUrl() = baseUrl() + aktoerRegisterBasePath
-internal fun WireMockServer.getPleiepengerDokumentBaseUrl() = baseUrl() + pleiepengerDokumentBasePath
+internal fun WireMockServer.getK9DokumentBaseUrl() = baseUrl() + k9DokumentBasePath

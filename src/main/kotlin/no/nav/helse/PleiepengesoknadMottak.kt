@@ -100,7 +100,7 @@ fun Application.pleiepengesoknadMottak() {
 
     val dokumentGateway = DokumentGateway(
         accessTokenClient = accessTokenClientResolver.dokumentAccessTokenClient(),
-        baseUrl = configuration.getPleiepengerDokumentBaseUrl(),
+        baseUrl = configuration.getK9DokumentBaseUrl(),
         lagreDokumentScopes = configuration.getLagreDokumentScopes()
     )
 
@@ -111,7 +111,7 @@ fun Application.pleiepengesoknadMottak() {
                     soknadV1KafkaProducer,
                     dokumentGateway,
                     HttpRequestHealthCheck(issuers.healthCheckMap(mutableMapOf(
-                        Url.healthURL(configuration.getPleiepengerDokumentBaseUrl()) to HttpRequestHealthConfig(expectedStatus = HttpStatusCode.OK)
+                        Url.healthURL(configuration.getK9DokumentBaseUrl()) to HttpRequestHealthConfig(expectedStatus = HttpStatusCode.OK)
                     )))
                 )
             )
