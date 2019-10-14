@@ -47,7 +47,7 @@ class PleiepengesoknadMottakTest {
         private val wireMockServer: WireMockServer = WireMockBuilder()
             .withAzureSupport()
             .build()
-            .stubPleiepengerDokumentHealth()
+            .stubK9DokumentHealth()
             .stubLagreDokument()
             .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerA, "1234561")
             .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerB, "1234562")

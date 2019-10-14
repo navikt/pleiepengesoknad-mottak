@@ -18,7 +18,7 @@ class PleiepengesoknadMottakWithMocks {
                 .withPort(8141)
                 .withAzureSupport()
                 .build()
-                .stubPleiepengerDokumentHealth()
+                .stubK9DokumentHealth()
                 .stubLagreDokument()
                 .stubAktoerRegisterGetAktoerId("02119970078", "1234561")
 
