@@ -1,7 +1,10 @@
 package no.nav.helse.mottak.v1
 
 import kotlinx.io.core.toByteArray
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.helse.Metadata
+import no.nav.helse.SoknadId
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
@@ -10,11 +13,16 @@ import no.nav.helse.kafka.KafkaConfig
 import no.nav.helse.kafka.TopicEntry
 import no.nav.helse.kafka.TopicUse
 import no.nav.helse.kafka.Topics
+import no.nav.helse.mottak.v1.dittnav.Environment
+import no.nav.helse.mottak.v1.dittnav.Kafka
+import no.nav.helse.mottak.v1.dittnav.ProduceBeskjedDto
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 internal class SoknadV1KafkaProducer(
     kafkaConfig: KafkaConfig
@@ -54,6 +62,25 @@ internal class SoknadV1KafkaProducer(
         logger.info("Søknad sendt til Topic '${TOPIC_USE.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
     }
 
+    private val producerAvDittNavMelding = KafkaProducer<Nokkel, Beskjed>(
+        Kafka.producerProps(Environment())
+    )
+
+    internal fun produceDittnavMelding(
+        dto: ProduceBeskjedDto,
+        soknadId: SoknadId
+    ) {
+        val recordMetaData = producerAvDittNavMelding.send(
+            ProducerRecord(
+                Topics.DITT_NAV_BESKJED,
+                createKeyForEvent(),
+                createBeskjedForIdent(soknadId.id, dto)
+            )
+        ).get()
+
+        logger.info("SoknadV1KafkaProducer produceDittnavMelding. Returnvalue, if any: ${recordMetaData}")
+    }
+
 
     internal fun stop() = producer.close()
 
@@ -83,4 +110,26 @@ private class SoknadV1OutgoingSerialier : Serializer<TopicEntry<JSONObject>> {
     }
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun close() {}
+}
+
+private fun createBeskjedForIdent(ident: String, dto: ProduceBeskjedDto): Beskjed {
+    val nowInMs = Instant.now().toEpochMilli()
+    val weekFromNowInMs = Instant.now().plus(7, ChronoUnit.DAYS).toEpochMilli()
+    val build = Beskjed.newBuilder()
+        .setFodselsnummer(ident)
+        .setGrupperingsId("100$nowInMs")
+        .setLink(dto.link)
+        .setTekst(dto.tekst)
+        .setTidspunkt(nowInMs)
+        .setSynligFremTil(weekFromNowInMs)
+    return build.build()
+}
+
+fun createKeyForEvent(): Nokkel {
+    val nowInMs = Instant.now().toEpochMilli()
+
+    return Nokkel.newBuilder()
+        .setEventId("$nowInMs")
+        .setSystembruker("DittNAV")
+        .build()
 }
