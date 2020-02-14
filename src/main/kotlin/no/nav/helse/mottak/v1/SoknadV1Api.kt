@@ -13,7 +13,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.post
 import no.nav.helse.Metadata
+import no.nav.helse.SoknadId
 import no.nav.helse.getSoknadId
+import no.nav.helse.mottak.v1.dittnav.ProduceBeskjedDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import validate
@@ -36,7 +38,22 @@ internal fun Route.SoknadV1Api(
     }
 }
 
-private suspend fun ApplicationCall.soknad() : SoknadV1Incoming {
+internal fun Route.DittNavV1Api(
+    dittNavV1Service: DittNavV1Service
+) {
+    post("v1/test-dittnav-melding") {
+
+        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
+        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
+            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
+            SoknadId("1337")
+        )
+        call.respond(HttpStatusCode.Accepted, "Din søknad om pleiepenger er mottatt.")
+    }
+}
+
+
+private suspend fun ApplicationCall.soknad(): SoknadV1Incoming {
     val json = receiveStream().use { String(it.readAllBytes(), Charsets.UTF_8) }
     val incoming = SoknadV1Incoming(json)
     incoming.validate()
