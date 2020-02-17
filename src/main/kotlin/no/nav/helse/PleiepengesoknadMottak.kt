@@ -127,6 +127,9 @@ fun Application.pleiepengesoknadMottak() {
                     soknadV1MottakService = SoknadV1MottakService(
                         dokumentGateway = dokumentGateway,
                         soknadV1KafkaProducer = soknadV1KafkaProducer
+                    ),
+                    dittNavV1Service = DittNavV1Service(
+                        soknadV1KafkaProducer = soknadV1KafkaProducer
                     )
                 )
                 DittNavV1Api(

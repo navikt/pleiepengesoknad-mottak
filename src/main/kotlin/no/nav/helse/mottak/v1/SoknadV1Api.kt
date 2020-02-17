@@ -6,7 +6,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.ApplicationRequest
 import io.ktor.request.header
-import io.ktor.request.receiveChannel
 import io.ktor.request.receiveStream
 import io.ktor.response.ApplicationResponse
 import io.ktor.response.respond
@@ -15,7 +14,6 @@ import io.ktor.routing.post
 import no.nav.helse.Metadata
 import no.nav.helse.SoknadId
 import no.nav.helse.getSoknadId
-import no.nav.helse.mottak.v1.dittnav.ProduceBeskjedDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import validate
@@ -23,7 +21,8 @@ import validate
 private val logger: Logger = LoggerFactory.getLogger("no.nav.SoknadV1Api")
 
 internal fun Route.SoknadV1Api(
-    soknadV1MottakService: SoknadV1MottakService
+    soknadV1MottakService: SoknadV1MottakService,
+    dittNavV1Service: DittNavV1Service
 ) {
     post("v1/soknad") {
         val soknadId = call.getSoknadId()
@@ -33,6 +32,11 @@ internal fun Route.SoknadV1Api(
             soknadId = soknadId,
             metadata = metadata,
             soknad = soknad
+        )
+        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
+        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
+            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
+            SoknadId("1337")
         )
         call.respond(HttpStatusCode.Accepted, mapOf("id" to soknadId.id))
     }

@@ -25,7 +25,8 @@ object KafkaWrapper {
             withSchemaRegistry = false,
             withSecurity = true,
             topicNames= listOf(
-                Topics.MOTTATT
+                Topics.MOTTATT,
+                Topics.DITT_NAV_BESKJED
             )
         )
         return kafkaEnvironment
@@ -48,7 +49,7 @@ internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<
         StringDeserializer(),
         SoknadV1OutgoingDeserialiser()
     )
-    consumer.subscribe(listOf(Topics.MOTTATT))
+    consumer.subscribe(listOf(Topics.MOTTATT, Topics.DITT_NAV_BESKJED))
     return consumer
 }
 
