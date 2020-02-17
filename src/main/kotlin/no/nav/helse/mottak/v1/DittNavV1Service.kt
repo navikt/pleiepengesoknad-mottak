@@ -1,7 +1,6 @@
 package no.nav.helse.mottak.v1
 
 import no.nav.helse.SoknadId
-import no.nav.helse.mottak.v1.dittnav.ProduceBeskjedDto
 import org.slf4j.LoggerFactory
 
 internal class DittNavV1Service(

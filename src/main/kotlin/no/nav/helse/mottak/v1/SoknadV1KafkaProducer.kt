@@ -13,9 +13,6 @@ import no.nav.helse.kafka.KafkaConfig
 import no.nav.helse.kafka.TopicEntry
 import no.nav.helse.kafka.TopicUse
 import no.nav.helse.kafka.Topics
-import no.nav.helse.mottak.v1.dittnav.Environment
-import no.nav.helse.mottak.v1.dittnav.Kafka
-import no.nav.helse.mottak.v1.dittnav.ProduceBeskjedDto
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serializer
@@ -33,6 +30,10 @@ internal class SoknadV1KafkaProducer(
             name = Topics.MOTTATT,
             valueSerializer = SoknadV1OutgoingSerialier()
         )
+        private val TOPIC_USE_DITT_NAV_MELDING = TopicUse(
+            name = Topics.DITT_NAV_BESKJED,
+            valueSerializer = DittNavBeskjedSerializer()
+        )
         private val logger = LoggerFactory.getLogger(SoknadV1KafkaProducer::class.java)
     }
 
@@ -40,6 +41,12 @@ internal class SoknadV1KafkaProducer(
         kafkaConfig.producer(NAME),
         TOPIC_USE.keySerializer(),
         TOPIC_USE.valueSerializer
+    )
+
+    private val producerAvDittNavMelding = KafkaProducer<Nokkel, Beskjed>(
+        kafkaConfig.producer(NAME),
+        TOPIC_USE_DITT_NAV_MELDING.keySerializer(),
+        TOPIC_USE_DITT_NAV_MELDING.valueSerializer
     )
 
     internal fun produce(
@@ -62,17 +69,13 @@ internal class SoknadV1KafkaProducer(
         logger.info("Søknad sendt til Topic '${TOPIC_USE.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
     }
 
-    private val producerAvDittNavMelding = KafkaProducer<Nokkel, Beskjed>(
-        Kafka.producerProps(Environment())
-    )
-
     internal fun produceDittnavMelding(
         dto: ProduceBeskjedDto,
         soknadId: SoknadId
     ) {
         val recordMetaData = producerAvDittNavMelding.send(
             ProducerRecord(
-                Topics.DITT_NAV_BESKJED,
+                TOPIC_USE_DITT_NAV_MELDING.name,
                 createKeyForEvent(),
                 createBeskjedForIdent(soknadId.id, dto)
             )
@@ -112,6 +115,14 @@ private class SoknadV1OutgoingSerialier : Serializer<TopicEntry<JSONObject>> {
     override fun close() {}
 }
 
+private class DittNavBeskjedSerializer : Serializer<TopicEntry<ProduceBeskjedDto>> {
+    override fun serialize(topic: String, data: TopicEntry<ProduceBeskjedDto>) : ByteArray {
+        return ProduceBeskjedDto("Din søknad er mottatt.", "").toString().toByteArray()
+    }
+    override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
+    override fun close() {}
+}
+
 private fun createBeskjedForIdent(ident: String, dto: ProduceBeskjedDto): Beskjed {
     val nowInMs = Instant.now().toEpochMilli()
     val weekFromNowInMs = Instant.now().plus(7, ChronoUnit.DAYS).toEpochMilli()
@@ -132,4 +143,10 @@ fun createKeyForEvent(): Nokkel {
         .setEventId("$nowInMs")
         .setSystembruker("DittNAV")
         .build()
+}
+
+class ProduceBeskjedDto(val tekst: String, val link: String) {
+    override fun toString(): String {
+        return "ProduceBeskjedDto{tekst='$tekst', link='$link'}"
+    }
 }
