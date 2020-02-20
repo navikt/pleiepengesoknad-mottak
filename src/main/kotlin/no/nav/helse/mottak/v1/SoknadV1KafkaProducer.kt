@@ -1,13 +1,9 @@
 package no.nav.helse.mottak.v1
 
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
-import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.netty.util.NetUtil
 import kotlinx.io.core.toByteArray
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.helse.Metadata
-import no.nav.helse.SoknadId
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
@@ -16,17 +12,13 @@ import no.nav.helse.kafka.KafkaConfig
 import no.nav.helse.kafka.TopicEntry
 import no.nav.helse.kafka.TopicUse
 import no.nav.helse.kafka.Topics
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import java.net.InetSocketAddress
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 internal class SoknadV1KafkaProducer(
     kafkaConfig: KafkaConfig
@@ -77,10 +69,10 @@ internal class SoknadV1KafkaProducer(
 
     internal fun produceDittnavMelding(
         dto: ProduceBeskjedDto,
-        soknadId: SoknadId
+        søkersNorskeIdent: String
     ) {
         val nokkel: Nokkel = createKeyForEvent()
-        val beskjed: Beskjed = createBeskjedForIdent(soknadId.id, dto)
+        val beskjed: Beskjed = createBeskjedForIdent(søkersNorskeIdent, dto)
 
         val producerRecord: ProducerRecord<Nokkel, Beskjed> = ProducerRecord(
             TOPIC_USE_DITT_NAV_MELDING.name,
