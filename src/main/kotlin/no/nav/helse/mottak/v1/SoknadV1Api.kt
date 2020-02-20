@@ -33,7 +33,7 @@ internal fun Route.SoknadV1Api(
             metadata = metadata,
             soknad = soknad
         )
-        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
+        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding. Peace.")
         dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
             ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
             SoknadId("1337")
