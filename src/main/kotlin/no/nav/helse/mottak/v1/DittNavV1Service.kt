@@ -1,6 +1,5 @@
 package no.nav.helse.mottak.v1
 
-import no.nav.helse.SoknadId
 import org.slf4j.LoggerFactory
 
 internal class DittNavV1Service(
@@ -12,14 +11,14 @@ internal class DittNavV1Service(
 
     fun sendSoknadMottattMeldingTilDittNav(
         dto: ProduceBeskjedDto,
-        soknadId: SoknadId
+        søkersNorskeIdent: String
     ): String {
 
         logger.trace("DittNavV1Service. Next: Produce dittnav kafka melding.")
 
         soknadV1KafkaProducer.produceDittnavMelding(
             dto,
-            soknadId
+            søkersNorskeIdent
         )
 
         return "Kafkaproducer aktivert."

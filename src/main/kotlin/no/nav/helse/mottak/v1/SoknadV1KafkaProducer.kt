@@ -4,7 +4,6 @@ import kotlinx.io.core.toByteArray
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.helse.Metadata
-import no.nav.helse.SoknadId
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
@@ -44,9 +43,8 @@ internal class SoknadV1KafkaProducer(
     )
 
     private val producerAvDittNavMelding = KafkaProducer<Nokkel, Beskjed>(
-        kafkaConfig.producer(NAME),
-        TOPIC_USE_DITT_NAV_MELDING.keySerializer(),
-        TOPIC_USE_DITT_NAV_MELDING.valueSerializer
+        kafkaConfig
+            .producerDittNavMelding(NAME)
     )
 
     internal fun produce(
@@ -71,14 +69,18 @@ internal class SoknadV1KafkaProducer(
 
     internal fun produceDittnavMelding(
         dto: ProduceBeskjedDto,
-        soknadId: SoknadId
+        søkersNorskeIdent: String
     ) {
+        val nokkel: Nokkel = createKeyForEvent()
+        val beskjed: Beskjed = createBeskjedForIdent(søkersNorskeIdent, dto)
+
+        val producerRecord: ProducerRecord<Nokkel, Beskjed> = ProducerRecord(
+            TOPIC_USE_DITT_NAV_MELDING.name,
+            nokkel,
+            beskjed
+        )
         val recordMetaData = producerAvDittNavMelding.send(
-            ProducerRecord(
-                TOPIC_USE_DITT_NAV_MELDING.name,
-                createKeyForEvent(),
-                createBeskjedForIdent(soknadId.id, dto)
-            )
+            producerRecord
         ).get()
 
         logger.info("SoknadV1KafkaProducer produceDittnavMelding. Returnvalue, if any: ${recordMetaData}")
@@ -141,7 +143,7 @@ fun createKeyForEvent(): Nokkel {
 
     return Nokkel.newBuilder()
         .setEventId("$nowInMs")
-        .setSystembruker("DittNAV")
+        .setSystembruker("DittNAV") // TODO: Må byttes med riktig systembruker
         .build()
 }
 

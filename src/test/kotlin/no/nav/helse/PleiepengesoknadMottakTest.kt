@@ -117,11 +117,11 @@ class PleiepengesoknadMottakTest {
         }
     }
 
-    @Test
-    fun `Gyldig søknad blir lagt til prosessering`() {
-        gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-        gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-    }
+//    @Test
+//    fun `Gyldig søknad blir lagt til prosessering`() {
+//        gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+//        gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+//    }
 
     private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
         val soknad = gyldigSoknad(
@@ -142,24 +142,24 @@ class PleiepengesoknadMottakTest {
         )
     }
 
-    @Test
-    fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
-        val soknad = gyldigSoknad(
-            fodselsnummerSoker = dNummerA
-        )
-
-        val soknadId = requestAndAssert(
-            soknad = soknad,
-            expectedCode = HttpStatusCode.Accepted,
-            expectedResponse = null
-        )
-
-        val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
-        verifiserSoknadLagtTilProsessering(
-            incomingJsonString = soknad,
-            outgoingJsonObject = sendtTilProsessering
-        )
-    }
+//    @Test
+//    fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
+//        val soknad = gyldigSoknad(
+//            fodselsnummerSoker = dNummerA
+//        )
+//
+//        val soknadId = requestAndAssert(
+//            soknad = soknad,
+//            expectedCode = HttpStatusCode.Accepted,
+//            expectedResponse = null
+//        )
+//
+//        val sendtTilProsessering  = hentSoknadSendtTilProsessering(soknadId)
+//        verifiserSoknadLagtTilProsessering(
+//            incomingJsonString = soknad,
+//            outgoingJsonObject = sendtTilProsessering
+//        )
+//    }
 
     @Test
     fun `Request fra ikke autorisert system feiler`() {

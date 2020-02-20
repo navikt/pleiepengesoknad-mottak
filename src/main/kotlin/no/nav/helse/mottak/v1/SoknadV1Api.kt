@@ -33,28 +33,28 @@ internal fun Route.SoknadV1Api(
             metadata = metadata,
             soknad = soknad
         )
-        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
+        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding. Peace.")
         dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
-            SoknadId("1337")
+            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GOGO", ""),
+            soknad.sokerFodselsNummer
         )
         call.respond(HttpStatusCode.Accepted, mapOf("id" to soknadId.id))
     }
 }
 
-internal fun Route.DittNavV1Api(
-    dittNavV1Service: DittNavV1Service
-) {
-    post("v1/test-dittnav-melding") {
-
-        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
-        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
-            SoknadId("1337")
-        )
-        call.respond(HttpStatusCode.Accepted, "Din søknad om pleiepenger er mottatt.")
-    }
-}
+//internal fun Route.DittNavV1Api(
+//    dittNavV1Service: DittNavV1Service
+//) {
+//    post("v1/test-dittnav-melding") {
+//
+//        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
+//        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
+//            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
+//            soknad.sokerFodselsNummer
+//        )
+//        call.respond(HttpStatusCode.Accepted, "Din søknad om pleiepenger er mottatt.")
+//    }
+//}
 
 
 private suspend fun ApplicationCall.soknad(): SoknadV1Incoming {

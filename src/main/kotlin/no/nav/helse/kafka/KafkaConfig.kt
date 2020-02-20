@@ -1,5 +1,7 @@
 package no.nav.helse.kafka
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
+import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -26,6 +28,14 @@ internal class KafkaConfig(
     internal fun producer(name: String) = producer.apply {
         put(ProducerConfig.CLIENT_ID_CONFIG, "$ID_PREFIX$name")
     }
+
+    internal fun producerDittNavMelding(name: String) = producer.apply {
+        put(ProducerConfig.CLIENT_ID_CONFIG, "$ID_PREFIX$name")
+        put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+        put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+        put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS", "http://localhost:8081"))
+
+    }
 }
 
 private fun Properties.medTrustStore(trustStore: Pair<String, String>?) {
@@ -51,3 +61,9 @@ private fun Properties.medCredentials(credentials: Pair<String, String>) {
         "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${credentials.first}\" password=\"${credentials.second}\";"
     )
 }
+
+fun getEnvVar(varName: String, defaultValue: String? = null): String {
+    val varValue = System.getenv(varName) ?: defaultValue
+    return varValue ?: throw IllegalArgumentException("Variable $varName cannot be empty")
+}
+
