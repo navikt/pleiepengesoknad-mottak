@@ -1,6 +1,5 @@
 # pleiepengesoknad-mottak
-
-[![CircleCI](https://circleci.com/gh/navikt/pleiepengesoknad-mottak/tree/master.svg?style=svg)](https://circleci.com/gh/navikt/pleiepengesoknad-mottak/tree/master)
+![CI / CD](https://github.com/navikt/pleiepengesoknad-mottak/workflows/CI%20/%20CD/badge.svg)
 
 Tjeneste som tar imot søknader om pleiepenger og legger de til til prosessering.
 Mottar søknad som REST API-kall. Legges videre på en Kafka Topic som tjenesten [pleiepengesoknad-prosessering](https://github.com/navikt/pleiepengesoknad-prosessering) prosesserer.
