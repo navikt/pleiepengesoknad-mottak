@@ -35,7 +35,7 @@ internal fun Route.SoknadV1Api(
         )
         logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding. Peace.")
         dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GOGO", ""),
+            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GLHF ny systembruker!", ""),
             soknad.sokerFodselsNummer
         )
         call.respond(HttpStatusCode.Accepted, mapOf("id" to soknadId.id))

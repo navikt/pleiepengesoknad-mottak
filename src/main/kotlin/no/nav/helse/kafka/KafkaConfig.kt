@@ -16,7 +16,7 @@ private const val ID_PREFIX = "srvpps-mottak-"
 
 internal class KafkaConfig(
     bootstrapServers: String,
-    credentials: Pair<String, String>,
+    val credentials: Pair<String, String>,
     trustStore: Pair<String, String>?
 ) {
     private val producer = Properties().apply {
@@ -34,7 +34,6 @@ internal class KafkaConfig(
         put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
         put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
         put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS", "http://localhost:8081"))
-
     }
 }
 

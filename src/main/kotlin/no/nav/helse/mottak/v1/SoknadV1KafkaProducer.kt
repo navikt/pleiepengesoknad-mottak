@@ -21,8 +21,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 internal class SoknadV1KafkaProducer(
-    kafkaConfig: KafkaConfig
+    val kafkaConfig: KafkaConfig
 ) : HealthCheck {
+
     private companion object {
         private val NAME = "SoknadV1Producer"
         private val TOPIC_USE = TopicUse(
@@ -46,6 +47,17 @@ internal class SoknadV1KafkaProducer(
         kafkaConfig
             .producerDittNavMelding(NAME)
     )
+
+
+    fun createKeyForEvent(): Nokkel {
+        val nowInMs = Instant.now().toEpochMilli()
+
+        val systemuser = kafkaConfig.credentials.first
+        return Nokkel.newBuilder()
+            .setEventId("$nowInMs")
+            .setSystembruker(systemuser) // TODO: MÅ BRUKE EN GYLDIG SYSTEMBRUKER !!!!!!
+            .build()
+    }
 
     internal fun produce(
         soknad: SoknadV1Outgoing,
@@ -138,14 +150,6 @@ private fun createBeskjedForIdent(ident: String, dto: ProduceBeskjedDto): Beskje
     return build.build()
 }
 
-fun createKeyForEvent(): Nokkel {
-    val nowInMs = Instant.now().toEpochMilli()
-
-    return Nokkel.newBuilder()
-        .setEventId("$nowInMs")
-        .setSystembruker("DittNAV") // TODO: Må byttes med riktig systembruker
-        .build()
-}
 
 class ProduceBeskjedDto(val tekst: String, val link: String) {
     override fun toString(): String {
