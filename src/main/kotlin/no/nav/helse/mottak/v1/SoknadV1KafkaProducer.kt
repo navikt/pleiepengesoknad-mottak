@@ -143,7 +143,7 @@ fun createKeyForEvent(): Nokkel {
 
     return Nokkel.newBuilder()
         .setEventId("$nowInMs")
-        .setSystembruker("DittNAV")
+        .setSystembruker("DittNAV") // TODO: Må byttes med riktig systembruker
         .build()
 }
 
