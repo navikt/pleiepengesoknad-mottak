@@ -51,14 +51,9 @@ class PleiepengesoknadEttersendingMottakTest {
             .build()
             .stubK9DokumentHealth()
             .stubLagreDokument()
-            /*.stubAktoerRegisterGetAktoerId(gyldigFodselsnummerA, "1234561")
-            .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerB, "1234562")
-            .stubAktoerRegisterGetAktoerId(gyldigFodselsnummerC, "1234563")
-            .stubAktoerRegisterGetAktoerId(dNummerA, "1234564")*/
-
 
         private val kafkaEnvironment = KafkaWrapper.bootstrap()
-        private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
+        private val kafkaTestConsumer = kafkaEnvironment.testEttersendingConsumer()
         private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
 
         private val authorizedAccessToken = Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak")
@@ -120,7 +115,7 @@ class PleiepengesoknadEttersendingMottakTest {
     }
 
     @Test
-    fun `Gyldig søknad blir lagt til prosessering`() {
+    fun `Gyldig ettersending blir lagt til prosessering`() {
         gyldigEttersendingBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
         gyldigEttersendingBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
     }
@@ -145,7 +140,7 @@ class PleiepengesoknadEttersendingMottakTest {
     }
 
     @Test
-    fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
+    fun `Gyldig ettersending fra D-nummer blir lagt til prosessering`() {
         val soknad = gyldigEttersending(
             fodselsnummerSoker = dNummerA
         )
@@ -216,7 +211,7 @@ class PleiepengesoknadEttersendingMottakTest {
     }
 
     @Test
-    fun `En ugyldig melding gir valideringsfeil`() {
+    fun `En ugyldig ettersending melding gir valideringsfeil`() {
         val ugyldigFnr = "290990123451"
         val soknad = """
         {
@@ -308,7 +303,6 @@ class PleiepengesoknadEttersendingMottakTest {
                     }
                     else -> assertEquals(expectedResponse, response.content)
                 }
-
             }
         }
         return null

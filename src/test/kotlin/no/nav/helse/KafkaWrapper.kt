@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import kafka.security.auth.Topic
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.kafka.TopicEntry
@@ -34,21 +33,31 @@ object KafkaWrapper {
     }
 }
 
-private fun KafkaEnvironment.testConsumerProperties() : MutableMap<String, Any>?  {
+private fun KafkaEnvironment.testConsumerProperties(clientId: String): MutableMap<String, Any>?  {
     return HashMap<String, Any>().apply {
         put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, brokersURL)
         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
         put(SaslConfigs.SASL_MECHANISM, "PLAIN")
         put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";")
-        put(ConsumerConfig.GROUP_ID_CONFIG, "PleiepengesoknadProsesseringTest")
+        put(ConsumerConfig.GROUP_ID_CONFIG, clientId)
     }
 }
 
 internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<JSONObject>> {
-    val consumer = KafkaConsumer<String, TopicEntry<JSONObject>>(
-        testConsumerProperties(),
+    val consumer = KafkaConsumer(
+        testConsumerProperties("PleiepengesoknadProsesseringTest"),
         StringDeserializer(),
         SoknadV1OutgoingDeserialiser()
+    )
+    consumer.subscribe(listOf(Topics.MOTTATT, Topics.ETTERSENDING_MOTTATT))
+    return consumer
+}
+
+internal fun KafkaEnvironment.testEttersendingConsumer() : KafkaConsumer<String, TopicEntry<JSONObject>> {
+    val consumer = KafkaConsumer(
+        testConsumerProperties("PleiepengesoknadProsesseringEttersendingTest"),
+        StringDeserializer(),
+        EttersendingOutgoingDeserializer()
     )
     consumer.subscribe(listOf(Topics.MOTTATT, Topics.ETTERSENDING_MOTTATT))
     return consumer
@@ -77,6 +86,24 @@ fun KafkaEnvironment.username() = username
 fun KafkaEnvironment.password() = password
 
 private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<JSONObject>> {
+    override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
+    override fun deserialize(topic: String, data: ByteArray): TopicEntry<JSONObject> {
+        val json = JSONObject(String(data))
+        val metadata = json.getJSONObject("metadata")
+        return TopicEntry(
+            metadata = Metadata(
+                version = metadata.getInt("version"),
+                correlationId = metadata.getString("correlation_id"),
+                requestId = metadata.getString("request_id")
+            ),
+            data = json.getJSONObject("data")
+        )
+    }
+    override fun close() {}
+
+}
+
+private class EttersendingOutgoingDeserializer : Deserializer<TopicEntry<JSONObject>> {
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun deserialize(topic: String, data: ByteArray): TopicEntry<JSONObject> {
         val json = JSONObject(String(data))
