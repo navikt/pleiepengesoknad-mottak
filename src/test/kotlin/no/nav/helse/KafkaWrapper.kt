@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import kafka.security.auth.Topic
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.kafka.TopicEntry
@@ -25,7 +26,8 @@ object KafkaWrapper {
             withSchemaRegistry = false,
             withSecurity = true,
             topicNames= listOf(
-                Topics.MOTTATT
+                Topics.MOTTATT,
+                Topics.ETTERSENDING_MOTTATT
             )
         )
         return kafkaEnvironment
@@ -48,7 +50,7 @@ internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<
         StringDeserializer(),
         SoknadV1OutgoingDeserialiser()
     )
-    consumer.subscribe(listOf(Topics.MOTTATT))
+    consumer.subscribe(listOf(Topics.MOTTATT, Topics.ETTERSENDING_MOTTATT))
     return consumer
 }
 
