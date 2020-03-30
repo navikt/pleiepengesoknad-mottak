@@ -14,8 +14,6 @@ internal class DittNavV1Service(
         søkersNorskeIdent: String
     ): String {
 
-        logger.trace("DittNavV1Service. Next: Produce dittnav kafka melding.")
-
         soknadV1KafkaProducer.produceDittnavMelding(
             dto,
             søkersNorskeIdent

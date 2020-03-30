@@ -42,21 +42,6 @@ internal fun Route.SoknadV1Api(
     }
 }
 
-//internal fun Route.DittNavV1Api(
-//    dittNavV1Service: DittNavV1Service
-//) {
-//    post("v1/test-dittnav-melding") {
-//
-//        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding.")
-//        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-//            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt.", ""),
-//            soknad.sokerFodselsNummer
-//        )
-//        call.respond(HttpStatusCode.Accepted, "Din søknad om pleiepenger er mottatt.")
-//    }
-//}
-
-
 private suspend fun ApplicationCall.soknad(): SoknadV1Incoming {
     val json = receiveStream().use { String(it.readAllBytes(), Charsets.UTF_8) }
     val incoming = SoknadV1Incoming(json)

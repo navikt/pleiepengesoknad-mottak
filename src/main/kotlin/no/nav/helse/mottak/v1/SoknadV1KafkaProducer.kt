@@ -95,6 +95,8 @@ internal class SoknadV1KafkaProducer(
             producerRecord
         ).get()
 
+        logger.info("Melding sendt til Topic: ${TOPIC_USE_DITT_NAV_MELDING.name}")
+
         logger.info("SoknadV1KafkaProducer produceDittnavMelding. Returnvalue, if any: ${recordMetaData}")
     }
 
