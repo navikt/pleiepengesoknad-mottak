@@ -14,6 +14,17 @@ internal fun EttersendingIncoming.validate() {
         )
     }
 
+    if (sokerFodselsNummer.length != 11 || !sokerFodselsNummer.erKunSiffer()) {
+        violations.add(
+            Violation(
+                parameterName = "soker.fodselsnummer",
+                parameterType = ParameterType.ENTITY,
+                reason = "Ikke gyldig fødselsnummer.",
+                invalidValue = sokerFodselsNummer
+            )
+        )
+    }
+
     if (!søkerAktørId.id.erKunSiffer()) {
         violations.add(
             Violation(

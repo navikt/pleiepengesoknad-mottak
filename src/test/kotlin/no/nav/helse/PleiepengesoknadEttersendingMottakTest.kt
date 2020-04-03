@@ -18,7 +18,6 @@ import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
-import no.nav.helse.mottak.v1.*
 import no.nav.helse.mottakEttersending.v1.EttersendingIncoming
 import no.nav.helse.mottakEttersending.v1.EttersendingOutgoing
 import org.apache.commons.codec.binary.Base64
@@ -245,7 +244,7 @@ class PleiepengesoknadEttersendingMottakTest {
                         "invalid_value": "$ugyldigFnr"
                     }, {
                         "type": "entity",
-                        "name": "soker.aktoer_id",
+                        "name": "søker.aktørId",
                         "reason": "Ikke gyldig Aktør ID.",
                         "invalid_value": "ABC"
                     }]
@@ -262,9 +261,11 @@ class PleiepengesoknadEttersendingMottakTest {
         val outgoing = EttersendingOutgoing(outgoingJsonObject)
 
         val outgoingFromIncoming = EttersendingIncoming(incomingJsonString)
+            .medVedleggTitler()
             .medSoknadId(outgoing.soknadId)
             .medVedleggUrls(outgoing.vedleggUrls)
             .somOutgoing()
+        println(outgoing.jsonObject.toString())
 
         JSONAssert.assertEquals(outgoingFromIncoming.jsonObject.toString(), outgoing.jsonObject.toString(), true)
     }
@@ -277,7 +278,7 @@ class PleiepengesoknadEttersendingMottakTest {
                                  leggTilAuthorization : Boolean = true,
                                  accessToken : String = authorizedAccessToken) : String? {
         with(engine) {
-            handleRequest(HttpMethod.Post, "/v1/soknad") {
+            handleRequest(HttpMethod.Post, "/v1/ettersend") {
                 if (leggTilAuthorization) {
                     addHeader(HttpHeaders.Authorization, "Bearer $accessToken")
                 }
@@ -332,6 +333,6 @@ class PleiepengesoknadEttersendingMottakTest {
 
     private fun hentEttersendingSendtTilProsessering(soknadId: String?) : JSONObject {
         assertNotNull(soknadId)
-        return kafkaTestConsumer.hentSoknad(soknadId).data
+        return kafkaTestConsumer.hentEttersending(soknadId).data
     }
 }

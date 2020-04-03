@@ -16,9 +16,11 @@ private object JsonKeys {
     internal const val content = "content"
     internal const val contentType = "content_type"
     internal const val title = "title"
+    internal const val titler = "titler"
 }
 
 internal class EttersendingIncoming(json: String) {
+    internal val sokerFodselsNummer : String
     private val jsonObject = JSONObject(json)
     internal val vedlegg: List<Vedlegg>
 
@@ -38,6 +40,7 @@ internal class EttersendingIncoming(json: String) {
     }
 
     init {
+        sokerFodselsNummer = jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.fødselsnummer)
         vedlegg = hentVedlegg()
         jsonObject.remove(JsonKeys.vedlegg)
     }
@@ -54,6 +57,15 @@ internal class EttersendingIncoming(json: String) {
 
     internal fun medVedleggUrls(vedleggUrls: List<URI>) : EttersendingIncoming {
         jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
+        return this
+    }
+
+    internal fun medVedleggTitler() : EttersendingIncoming{
+        val listeOverTitler = mutableListOf<String>()
+        for(vedlegg in vedlegg){
+            listeOverTitler.add(vedlegg.title)
+        }
+        jsonObject.put(JsonKeys.titler, listeOverTitler)
         return this
     }
 

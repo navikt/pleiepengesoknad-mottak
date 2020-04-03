@@ -82,6 +82,26 @@ internal fun KafkaConsumer<String, TopicEntry<JSONObject>>.hentSoknad(
     throw IllegalStateException("Fant ikke opprettet oppgave for søknad $soknadId etter $maxWaitInSeconds sekunder.")
 }
 
+internal fun KafkaConsumer<String, TopicEntry<JSONObject>>.hentEttersending(
+    soknadId: String,
+    maxWaitInSeconds: Long = 20
+) : TopicEntry<JSONObject> {
+    val end = System.currentTimeMillis() + Duration.ofSeconds(maxWaitInSeconds).toMillis()
+    while (System.currentTimeMillis() < end) {
+        seekToBeginning(assignment())
+        val entries = poll(Duration.ofSeconds(1))
+            .records(Topics.ETTERSENDING_MOTTATT)
+            .filter { it.key().equals(soknadId) }
+
+        if (entries.isNotEmpty()) {
+            assertEquals(1, entries.size)
+            return entries.first().value()
+        }
+    }
+    throw IllegalStateException("Fant ikke opprettet oppgave for søknad $soknadId etter $maxWaitInSeconds sekunder.")
+}
+
+
 fun KafkaEnvironment.username() = username
 fun KafkaEnvironment.password() = password
 
