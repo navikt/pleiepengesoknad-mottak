@@ -69,8 +69,7 @@ internal class EttersendingIncoming(json: String) {
         return this
     }
 
-    internal fun somOutgoing() =
-        EttersendingOutgoing(jsonObject)
+    internal fun somOutgoing() = EttersendingOutgoing(jsonObject)
 
 }
 
