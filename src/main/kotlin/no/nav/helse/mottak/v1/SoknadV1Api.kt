@@ -33,11 +33,14 @@ internal fun Route.SoknadV1Api(
             metadata = metadata,
             soknad = soknad
         )
-        logger.trace("DittNavV1Api. Post fra pleiepengesoknad-api. Neste: Sende dittnav kafka melding. Peace.")
-        dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-            ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GLHF ny systembruker!", ""),
-            soknad.sokerFodselsNummer
-        )
+        try {
+            dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
+                ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GLHF ny systembruker!", ""),
+                soknad.sokerFodselsNummer
+            )
+        } catch (e: Exception) {
+            // TODO: Do anything if it fails?
+        }
         call.respond(HttpStatusCode.Accepted, mapOf("id" to soknadId.id))
     }
 }
