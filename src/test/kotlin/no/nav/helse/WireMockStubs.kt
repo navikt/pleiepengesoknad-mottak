@@ -69,6 +69,7 @@ internal fun WireMockServer.stubKafkaSchemaRegistry(
                 .withBody("[1]")
         )
     )
+    
     return this
 }
 
