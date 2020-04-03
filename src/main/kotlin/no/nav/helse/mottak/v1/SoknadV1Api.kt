@@ -35,7 +35,9 @@ internal fun Route.SoknadV1Api(
         )
         try {
             dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-                ProduceBeskjedDto("Din søknad om pleiepenger er mottatt. GLHF ny systembruker!", ""),
+                ProduceBeskjedDto(
+                    tekst = "Vi har mottatt søknaden din om pleiepenger. Les mer om hva som skjer etter at du har søkt.",
+                    link = "https://www.nav.no/familie/sykdom-i-familien/nb/pleiepenger-for-sykt-barn#Etter-at-du-har-sokt"),
                 soknad.sokerFodselsNummer
             )
         } catch (e: Exception) {
