@@ -55,7 +55,7 @@ internal class SoknadV1KafkaProducer(
         val systemuser = kafkaConfig.credentials.first
         return Nokkel.newBuilder()
             .setEventId("$nowInMs")
-            .setSystembruker(systemuser) // TODO: MÅ BRUKE EN GYLDIG SYSTEMBRUKER !!!!!!
+            .setSystembruker(systemuser)
             .build()
     }
 
