@@ -1,5 +1,6 @@
 package no.nav.helse.mottak.v1
 
+import no.nav.helse.SoknadId
 import org.slf4j.LoggerFactory
 
 internal class DittNavV1Service(
@@ -11,12 +12,14 @@ internal class DittNavV1Service(
 
     fun sendSoknadMottattMeldingTilDittNav(
         dto: ProduceBeskjedDto,
-        søkersNorskeIdent: String
+        søkersNorskeIdent: String,
+        soknadId: SoknadId
     ): String {
 
         soknadV1KafkaProducer.produceDittnavMelding(
-            dto,
-            søkersNorskeIdent
+            dto = dto,
+            søkersNorskeIdent = søkersNorskeIdent,
+            soknadId = soknadId
         )
 
         return "Kafkaproducer aktivert."

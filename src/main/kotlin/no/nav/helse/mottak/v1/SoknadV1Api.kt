@@ -25,9 +25,9 @@ internal fun Route.SoknadV1Api(
     dittNavV1Service: DittNavV1Service
 ) {
     post("v1/soknad") {
-        val soknadId = call.getSoknadId()
-        val metadata = call.metadata()
-        val soknad = call.soknad()
+        val soknadId: SoknadId = call.getSoknadId()
+        val metadata: Metadata = call.metadata()
+        val soknad: SoknadV1Incoming = call.soknad()
         soknadV1MottakService.leggTilProsessering(
             soknadId = soknadId,
             metadata = metadata,
@@ -35,10 +35,11 @@ internal fun Route.SoknadV1Api(
         )
         try {
             dittNavV1Service.sendSoknadMottattMeldingTilDittNav(
-                ProduceBeskjedDto(
+                dto = ProduceBeskjedDto(
                     tekst = "Vi har mottatt søknaden din om pleiepenger. Les mer om hva som skjer etter at du har søkt.",
                     link = "https://www.nav.no/familie/sykdom-i-familien/nb/pleiepenger-for-sykt-barn#Etter-at-du-har-sokt"),
-                soknad.sokerFodselsNummer
+                søkersNorskeIdent = soknad.sokerFodselsNummer,
+                soknadId = soknadId
             )
         } catch (e: Exception) {
             logger.error("Kunne ikke sende melding til ditt nav om innsendt søknad: $e")

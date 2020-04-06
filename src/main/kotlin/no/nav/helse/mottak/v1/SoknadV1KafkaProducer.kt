@@ -4,6 +4,7 @@ import kotlinx.io.core.toByteArray
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.helse.Metadata
+import no.nav.helse.SoknadId
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
@@ -19,6 +20,7 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 internal class SoknadV1KafkaProducer(
     val kafkaConfig: KafkaConfig
@@ -49,12 +51,10 @@ internal class SoknadV1KafkaProducer(
     )
 
 
-    fun createKeyForEvent(): Nokkel {
-        val nowInMs = Instant.now().toEpochMilli()
-
+    fun createKeyForEvent(eventId: String): Nokkel {
         val systemuser = kafkaConfig.credentials.first
         return Nokkel.newBuilder()
-            .setEventId("$nowInMs")
+            .setEventId(eventId)
             .setSystembruker(systemuser)
             .build()
     }
@@ -81,10 +81,18 @@ internal class SoknadV1KafkaProducer(
 
     internal fun produceDittnavMelding(
         dto: ProduceBeskjedDto,
-        søkersNorskeIdent: String
+        søkersNorskeIdent: String,
+        soknadId: SoknadId
     ) {
-        val nokkel: Nokkel = createKeyForEvent()
-        val beskjed: Beskjed = createBeskjedForIdent(søkersNorskeIdent, dto)
+        val eventId = UUID.randomUUID().toString()
+        val nokkel: Nokkel = createKeyForEvent(
+            eventId = eventId
+        )
+        val beskjed: Beskjed = createBeskjedForIdent(
+            ident = søkersNorskeIdent,
+            dto = dto,
+            grupperingsId = soknadId.id
+        )
 
         val producerRecord: ProducerRecord<Nokkel, Beskjed> = ProducerRecord(
             TOPIC_USE_DITT_NAV_MELDING.name,
@@ -94,9 +102,6 @@ internal class SoknadV1KafkaProducer(
         val recordMetaData = producerAvDittNavMelding.send(
             producerRecord
         ).get()
-
-        logger.info("Melding sendt til Topic: ${TOPIC_USE_DITT_NAV_MELDING.name}")
-
         logger.info("SoknadV1KafkaProducer produceDittnavMelding. Returnvalue, if any: ${recordMetaData}")
     }
 
@@ -115,7 +120,7 @@ internal class SoknadV1KafkaProducer(
 }
 
 private class SoknadV1OutgoingSerialier : Serializer<TopicEntry<JSONObject>> {
-    override fun serialize(topic: String, data: TopicEntry<JSONObject>) : ByteArray {
+    override fun serialize(topic: String, data: TopicEntry<JSONObject>): ByteArray {
         val metadata = JSONObject()
             .put("correlation_id", data.metadata.correlationId)
             .put("request_id", data.metadata.requestId)
@@ -127,24 +132,26 @@ private class SoknadV1OutgoingSerialier : Serializer<TopicEntry<JSONObject>> {
             .toString()
             .toByteArray()
     }
+
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun close() {}
 }
 
 private class DittNavBeskjedSerializer : Serializer<TopicEntry<ProduceBeskjedDto>> {
-    override fun serialize(topic: String, data: TopicEntry<ProduceBeskjedDto>) : ByteArray {
-        return ProduceBeskjedDto("Din søknad er mottatt.", "").toString().toByteArray()
+    override fun serialize(topic: String, data: TopicEntry<ProduceBeskjedDto>): ByteArray {
+        return ProduceBeskjedDto(data.data.tekst, data.data.link).toString().toByteArray()
     }
+
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun close() {}
 }
 
-private fun createBeskjedForIdent(ident: String, dto: ProduceBeskjedDto): Beskjed {
+private fun createBeskjedForIdent(ident: String, dto: ProduceBeskjedDto, grupperingsId: String): Beskjed {
     val nowInMs = Instant.now().toEpochMilli()
     val weekFromNowInMs = Instant.now().plus(7, ChronoUnit.DAYS).toEpochMilli()
     val build = Beskjed.newBuilder()
         .setFodselsnummer(ident)
-        .setGrupperingsId("100$nowInMs")
+        .setGrupperingsId(grupperingsId)
         .setLink(dto.link)
         .setTekst(dto.tekst)
         .setTidspunkt(nowInMs)
