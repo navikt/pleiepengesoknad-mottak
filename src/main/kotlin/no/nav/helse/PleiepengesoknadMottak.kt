@@ -28,6 +28,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.helse.mottak.v1.DittNavV1Service
 import no.nav.helse.mottak.v1.SoknadV1Api
 import no.nav.helse.mottak.v1.SoknadV1KafkaProducer
 import no.nav.helse.mottak.v1.SoknadV1MottakService
@@ -123,6 +124,9 @@ fun Application.pleiepengesoknadMottak() {
                 SoknadV1Api(
                     soknadV1MottakService = SoknadV1MottakService(
                         dokumentGateway = dokumentGateway,
+                        soknadV1KafkaProducer = soknadV1KafkaProducer
+                    ),
+                    dittNavV1Service = DittNavV1Service(
                         soknadV1KafkaProducer = soknadV1KafkaProducer
                     )
                 )

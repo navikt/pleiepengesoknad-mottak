@@ -21,6 +21,7 @@ class PleiepengesoknadMottakWithMocks {
                 .stubK9DokumentHealth()
                 .stubLagreDokument()
                 .stubAktoerRegisterGetAktoerId("02119970078", "1234561")
+                .stubKafkaSchemaRegistry("/subjects/aapen-brukernotifikasjon-nyBeskjed-v1-key/versions")
 
             val kafkaEnvironment = KafkaWrapper.bootstrap()
 

@@ -1,12 +1,18 @@
 package no.nav.helse
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.kafka.TopicEntry
 import no.nav.helse.kafka.Topics
+import no.nav.helse.kafka.getEnvVar
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -25,7 +31,8 @@ object KafkaWrapper {
             withSchemaRegistry = false,
             withSecurity = true,
             topicNames= listOf(
-                Topics.MOTTATT
+                Topics.MOTTATT,
+                Topics.DITT_NAV_BESKJED
             )
         )
         return kafkaEnvironment
@@ -49,6 +56,27 @@ internal fun KafkaEnvironment.testConsumer() : KafkaConsumer<String, TopicEntry<
         SoknadV1OutgoingDeserialiser()
     )
     consumer.subscribe(listOf(Topics.MOTTATT))
+    return consumer
+}
+
+private fun KafkaEnvironment.testDittNavConsumerProperties() : MutableMap<String, Any>?  {
+    return HashMap<String, Any>().apply {
+        put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, brokersURL)
+        put(ConsumerConfig.GROUP_ID_CONFIG, "PleiepengesoknadProsesseringTest")
+        put(ProducerConfig.CLIENT_ID_CONFIG, "SoknadV1Producer")
+        put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+        put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+        put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS", "http://localhost:8080"))
+    }
+}
+
+internal fun KafkaEnvironment.testDittNavConsumer() : KafkaConsumer<Nokkel, Beskjed> {
+    val consumer = KafkaConsumer<Nokkel, Beskjed>(
+        testDittNavConsumerProperties(),
+        NokkelDeserializer(),
+        BeskjedDeserializer()
+    )
+    consumer.subscribe(listOf(Topics.DITT_NAV_BESKJED))
     return consumer
 }
 
@@ -90,4 +118,16 @@ private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<JSONObject>
     }
     override fun close() {}
 
+}
+
+private class NokkelDeserializer : Deserializer<Nokkel> {
+    override fun deserialize(topic: String?, data: ByteArray?): Nokkel {
+        return no.nav.brukernotifikasjon.schemas.Nokkel.newBuilder().build()
+    }
+}
+
+private class BeskjedDeserializer : Deserializer<Beskjed> {
+    override fun deserialize(topic: String?, data: ByteArray?): Beskjed {
+        return no.nav.brukernotifikasjon.schemas.Beskjed.newBuilder().build()
+    }
 }

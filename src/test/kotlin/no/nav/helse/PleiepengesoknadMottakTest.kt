@@ -57,6 +57,8 @@ class PleiepengesoknadMottakTest {
 
         private val kafkaEnvironment = KafkaWrapper.bootstrap()
         private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
+        private val kafkaTestDittNavConsumer = kafkaEnvironment.testDittNavConsumer()
+
         private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
 
         private val authorizedAccessToken = Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak")
