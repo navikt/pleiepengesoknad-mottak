@@ -228,6 +228,14 @@ class PleiepengesoknadMottakTest {
         }
         """.trimIndent()
 
+        /*
+        {
+            "type": "entity",
+            "name": "vedlegg",
+            "reason": "Det må sendes minst et vedlegg.",
+            "invalid_value": []
+        },
+         */
         requestAndAssert(
             soknad = soknad,
             expectedCode = HttpStatusCode.BadRequest,
@@ -239,11 +247,6 @@ class PleiepengesoknadMottakTest {
                     "detail": "Requesten inneholder ugyldige paramtere.",
                     "instance": "about:blank",
                     "invalid_parameters": [{
-                        "type": "entity",
-                        "name": "vedlegg",
-                        "reason": "Det må sendes minst et vedlegg.",
-                        "invalid_value": []
-                    }, {
                         "type": "entity",
                         "name": "soker.fodselsnummer",
                         "reason": "Ikke gyldig fødselsnummer.",

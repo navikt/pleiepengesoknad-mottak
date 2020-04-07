@@ -3,7 +3,7 @@ import no.nav.helse.mottak.v1.SoknadV1Incoming
 
 internal fun SoknadV1Incoming.validate() {
     val violations = mutableSetOf<Violation>()
-    if (vedlegg.isEmpty()) {
+    /*if (vedlegg.isEmpty()) {
         violations.add(
             Violation(
                 parameterName = "vedlegg",
@@ -12,7 +12,7 @@ internal fun SoknadV1Incoming.validate() {
                 invalidValue = vedlegg
             )
         )
-    }
+    } TODO: Fjern kommentar når det er krav om validering av vedlegg er påkrevd igjen */
 
     if (sokerFodselsNummer.length != 11 || !sokerFodselsNummer.erKunSiffer()) {
         violations.add(
