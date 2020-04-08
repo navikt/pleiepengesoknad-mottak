@@ -42,7 +42,7 @@ internal fun Route.SoknadV1Api(
                 soknadId = soknadId
             )
         } catch (e: Exception) {
-            logger.error("Kunne ikke sende melding til ditt nav om innsendt søknad: $e")
+            logger.error("Kunne ikke sende melding til Ditt NAV om innsendt søknad: $e")
         }
         call.respond(HttpStatusCode.Accepted, mapOf("id" to soknadId.id))
     }
