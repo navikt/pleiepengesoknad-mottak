@@ -28,16 +28,12 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.helse.ettersending.v1.EttersendingApis
 import no.nav.helse.mottak.v1.DittNavV1Service
 import no.nav.helse.mottak.v1.SoknadV1Api
 import no.nav.helse.mottak.v1.SoknadV1KafkaProducer
 import no.nav.helse.mottak.v1.SoknadV1MottakService
-import no.nav.helse.mottakEttersending.v1.EttersendingKafkaProducer
-import no.nav.helse.mottakEttersending.v1.EttersendingV1MottakService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URI
 import java.util.*
 
 private val logger: Logger = LoggerFactory.getLogger("no.nav.PleiepengesoknadMottak")
@@ -96,14 +92,9 @@ fun Application.pleiepengesoknadMottak() {
         kafkaConfig = configuration.getKafkaConfig()
     )
 
-    val ettersendingKafkaProducer = EttersendingKafkaProducer(
-        kafkaConfig = configuration.getKafkaConfig()
-    )
-
     environment.monitor.subscribe(ApplicationStopping) {
         logger.info("Stopper Kafka Producer.")
         soknadV1KafkaProducer.stop()
-        ettersendingKafkaProducer.stop()
         logger.info("Kafka Producer Stoppet.")
     }
 
@@ -118,7 +109,6 @@ fun Application.pleiepengesoknadMottak() {
             healthService = HealthService(
                 healthChecks = setOf(
                     soknadV1KafkaProducer,
-                    ettersendingKafkaProducer,
                     dokumentGateway
                 )
             )
@@ -134,13 +124,6 @@ fun Application.pleiepengesoknadMottak() {
                     ),
                     dittNavV1Service = DittNavV1Service(
                         soknadV1KafkaProducer = soknadV1KafkaProducer
-                    )
-                )
-
-                EttersendingApis(
-                    ettersendingV1MottakService = EttersendingV1MottakService(
-                        dokumentGateway = dokumentGateway,
-                        ettersendingKafkaProducer = ettersendingKafkaProducer
                     )
                 )
             }
