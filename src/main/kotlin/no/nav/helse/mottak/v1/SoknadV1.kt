@@ -1,20 +1,21 @@
 package no.nav.helse.mottak.v1
 
-import no.nav.helse.SoknadId
+import com.fasterxml.jackson.annotation.JsonAlias
 import no.nav.helse.AktoerId
+import no.nav.helse.SoknadId
 import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import java.net.URI
 
 private object JsonKeys {
     internal const val vedlegg = "vedlegg"
-    internal const val soker = "soker"
-    internal const val aktoerId = "aktoer_id"
+    @JsonAlias("soker") internal const val søker = "søker"
+    @JsonAlias("aktoer_id") internal const val aktørId = "aktørId"
     internal const val vedleggUrls = "vedlegg_urls"
-    internal const val soknadId = "soknad_id"
-    internal const val fodselsnummer = "fodselsnummer"
+    @JsonAlias("soknad_id") internal const val søknadId = "søknadId"
+    @JsonAlias("content_type") internal const val fødselsnummer = "fødselsnummer"
     internal const val content = "content"
-    internal const val contentType = "content_type"
+    @JsonAlias("content_type") internal const val contentType = "contentType"
     internal const val title = "title"
 }
 
@@ -37,12 +38,12 @@ internal class SoknadV1Incoming(json: String) {
     }
 
     init {
-        sokerFodselsNummer = jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.fodselsnummer)
+        sokerFodselsNummer = jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.fødselsnummer)
         vedlegg = hentVedlegg()
         jsonObject.remove(JsonKeys.vedlegg)
     }
 
-    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.soker).getString(JsonKeys.aktoerId))
+    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.aktørId))
 
     internal fun medVedleggUrls(vedleggUrls: List<URI>) : SoknadV1Incoming {
         jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
@@ -50,7 +51,7 @@ internal class SoknadV1Incoming(json: String) {
     }
 
     internal fun medSoknadId(soknadId: SoknadId) : SoknadV1Incoming {
-        jsonObject.put(JsonKeys.soknadId, soknadId.id)
+        jsonObject.put(JsonKeys.søknadId, soknadId.id)
         return this
     }
 
@@ -59,7 +60,7 @@ internal class SoknadV1Incoming(json: String) {
 }
 
 internal class SoknadV1Outgoing(internal val jsonObject: JSONObject) {
-    internal val soknadId = SoknadId(jsonObject.getString(JsonKeys.soknadId))
+    internal val soknadId = SoknadId(jsonObject.getString(JsonKeys.søknadId))
     internal val vedleggUrls = hentVedleggUrls()
     private fun hentVedleggUrls() : List<URI> {
         val vedleggUrls = mutableListOf<URI>()

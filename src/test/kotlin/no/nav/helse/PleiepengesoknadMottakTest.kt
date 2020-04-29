@@ -18,7 +18,8 @@ import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
-import no.nav.helse.mottak.v1.*
+import no.nav.helse.mottak.v1.SoknadV1Incoming
+import no.nav.helse.mottak.v1.SoknadV1Outgoing
 import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import org.junit.AfterClass
@@ -220,9 +221,9 @@ class PleiepengesoknadMottakTest {
         val ugyldigFnr = "290990123451"
         val soknad = """
         {
-            "soker": {
-                "fodselsnummer": "$ugyldigFnr",
-                "aktoer_id": "ABC"
+            "søker": {
+                "fødselsnummer": "$ugyldigFnr",
+                "aktørId": "ABC"
             },
             vedlegg: []
         }
@@ -248,12 +249,12 @@ class PleiepengesoknadMottakTest {
                     "instance": "about:blank",
                     "invalid_parameters": [{
                         "type": "entity",
-                        "name": "soker.fodselsnummer",
+                        "name": "søker.fødselsnummer",
                         "reason": "Ikke gyldig fødselsnummer.",
                         "invalid_value": "$ugyldigFnr"
                     }, {
                         "type": "entity",
-                        "name": "soker.aktoer_id",
+                        "name": "søker.aktørId",
                         "reason": "Ikke gyldig Aktør ID.",
                         "invalid_value": "ABC"
                     }]
@@ -323,13 +324,13 @@ class PleiepengesoknadMottakTest {
     ) : String =
         """
         {
-            "soker": {
-                "fodselsnummer": "$fodselsnummerSoker",
-                "aktoer_id": "123456"
+            "søker": {
+                "fødselsnummer": "$fodselsnummerSoker",
+                "aktørId": "123456"
             },
             vedlegg: [{
                 "content": "${Base64.encodeBase64String("iPhone_6.jpg".fromResources().readBytes())}",
-                "content_type": "image/jpeg",
+                "contentType": "image/jpeg",
                 "title": "Et fint bilde"
             }],
             "hvilke_som_helst_andre_atributter": {
