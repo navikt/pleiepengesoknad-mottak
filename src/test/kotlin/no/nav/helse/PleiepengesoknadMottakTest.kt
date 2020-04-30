@@ -126,9 +126,34 @@ class PleiepengesoknadMottakTest {
         gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
     }
 
+    @Test
+    fun `Gyldig søknad med snake_case blir lagt til prosessering`() {
+        gyldigSoknadMedSnake_caseBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+        gyldigSoknadMedSnake_caseBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+    }
+
+    private fun gyldigSoknadMedSnake_caseBlirLagtTilProsessering(accessToken: String) {
+        val soknad = gyldigSoknadMedSnake_case(
+            fødselsnummerSøker = gyldigFodselsnummerA
+        )
+
+        val soknadId = requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.Accepted,
+            expectedResponse = null,
+            accessToken = accessToken
+        )
+
+        val sendtTilProsessering = hentSoknadSendtTilProsessering(soknadId)
+        verifiserSoknadLagtTilProsessering(
+            incomingJsonString = soknad,
+            outgoingJsonObject = sendtTilProsessering
+        )
+    }
+
     private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA
+            fødselsnummerSøker = gyldigFodselsnummerA
         )
 
         val soknadId = requestAndAssert(
@@ -148,7 +173,7 @@ class PleiepengesoknadMottakTest {
     @Test
     fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = dNummerA
+            fødselsnummerSøker = dNummerA
         )
 
         val soknadId = requestAndAssert(
@@ -167,7 +192,7 @@ class PleiepengesoknadMottakTest {
     @Test
     fun `Request fra ikke autorisert system feiler`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA
+            fødselsnummerSøker = gyldigFodselsnummerA
         )
 
         requestAndAssert(
@@ -189,7 +214,7 @@ class PleiepengesoknadMottakTest {
     @Test
     fun `Request uten corelation id feiler`() {
         val soknad = gyldigSoknad(
-            fodselsnummerSoker = gyldigFodselsnummerA
+            fødselsnummerSøker = gyldigFodselsnummerA
         )
 
         requestAndAssert(
@@ -319,13 +344,11 @@ class PleiepengesoknadMottakTest {
     }
 
 
-    private fun gyldigSoknad(
-        fodselsnummerSoker : String
-    ) : String =
+    private fun gyldigSoknad( fødselsnummerSøker : String) : String =
         """
         {
             "søker": {
-                "fødselsnummer": "$fodselsnummerSoker",
+                "fødselsnummer": "$fødselsnummerSøker",
                 "aktørId": "123456"
             },
             vedlegg: [{
@@ -339,6 +362,28 @@ class PleiepengesoknadMottakTest {
             }
         }
         """.trimIndent()
+
+    private fun gyldigSoknadMedSnake_case(fødselsnummerSøker: String): String =
+        """
+            {
+          "soker": {
+            "fodselsnummer": "$fødselsnummerSøker",
+            "aktoer_id": "123456"
+          },
+          vedlegg: [
+            {
+              "content": "${Base64.encodeBase64String("iPhone_6.jpg".fromResources().readBytes())}",
+              "content_type": "image/jpeg",
+              "title": "Et fint bilde"
+            }
+          ],
+          "hvilke_som_helst_andre_atributter": {
+            "enabled": true,
+            "norsk": "Sære Åreknuter"
+          }
+        }   
+        """.trimIndent()
+
 
     private fun hentSoknadSendtTilProsessering(soknadId: String?) : JSONObject {
         assertNotNull(soknadId)
