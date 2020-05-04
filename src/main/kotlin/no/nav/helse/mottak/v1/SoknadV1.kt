@@ -12,7 +12,7 @@ private object JsonKeys {
     internal const val gammelSoker = "soker"
     internal const val aktørId = "aktørId"
     internal const val gammelAktoerId = "aktoer_id"
-    internal const val vedleggUrls = "vedlegg_urls"
+    internal const val vedleggUrls = "vedleggUrls"
     internal const val søknadId = "søknadId"
     internal const val fødselsnummer = "fødselsnummer"
     internal const val gammelFodselsnummer = "fodselsnummer"
