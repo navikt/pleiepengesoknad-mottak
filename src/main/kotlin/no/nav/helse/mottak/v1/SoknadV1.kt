@@ -55,7 +55,6 @@ internal class SoknadV1Incoming(json: String) {
         jsonObject.has(JsonKeys.søker) -> AktoerId(jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.aktørId))
         else -> AktoerId(jsonObject.getJSONObject(JsonKeys.gammelSoker).getString(JsonKeys.gammelAktoerId))}
 
-
     internal fun medVedleggUrls(vedleggUrls: List<URI>) : SoknadV1Incoming {
         jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
         return this
