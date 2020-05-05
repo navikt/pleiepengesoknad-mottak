@@ -356,7 +356,7 @@ class PleiepengesoknadMottakTest {
                 "contentType": "image/jpeg",
                 "title": "Et fint bilde"
             }],
-            "hvilke_som_helst_andre_atributter": {
+            "hvilkeSomHelstSndreAtributter": {
                 "enabled": true,
                 "norsk": "Sære Åreknuter"
             }
