@@ -8,6 +8,7 @@ import io.ktor.config.HoconApplicationConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.engine.stop
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.createTestEnvironment
 import io.ktor.server.testing.handleRequest
@@ -16,8 +17,8 @@ import io.ktor.util.KtorExperimentalAPI
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.helse.dusseldorf.ktor.testsupport.jws.Azure
-import no.nav.helse.dusseldorf.ktor.testsupport.wiremock.WireMockBuilder
+import no.nav.helse.dusseldorf.testsupport.jws.Azure
+import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.mottak.v1.SoknadV1Incoming
 import no.nav.helse.mottak.v1.SoknadV1Outgoing
 import org.apache.commons.codec.binary.Base64

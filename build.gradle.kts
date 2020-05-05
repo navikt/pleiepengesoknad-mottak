@@ -1,7 +1,7 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val dusseldorfKtorVersion = "1.2.3.b45ba92"
+val dusseldorfKtorVersion = "1.3.2.f7c00dd"
 val ktorVersion = ext.get("ktorVersion").toString()
 val kafkaEmbeddedEnvVersion = "2.2.0"
 val kafkaVersion = "2.3.0" // Alligned med version fra kafka-embedded-env
@@ -19,12 +19,22 @@ plugins {
 
 
 buildscript {
-    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/b45ba92fbe655e1818374daf6465af5174a72183/gradle/dusseldorf-ktor.gradle.kts")
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/f7c00ddfe9c82530b6d7a8bd5d927cc5c821b269/gradle/dusseldorf-ktor.gradle.kts")
 }
 
 
 repositories {
     maven("http://packages.confluent.io/maven/")
+
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/navikt/dusseldorf-ktor")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+
     jcenter()
     mavenLocal()
     mavenCentral()
@@ -51,7 +61,7 @@ dependencies {
 
     // Test
     testCompile  ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
-    testCompile ( "no.nav.helse:dusseldorf-ktor-test-support:$dusseldorfKtorVersion")
+    testCompile ( "no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
     testCompile ( "io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }

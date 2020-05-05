@@ -9,7 +9,6 @@ import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.jackson.jackson
-import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorExperimentalAPI
@@ -26,7 +25,6 @@ import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
-import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.helse.ettersending.v1.EttersendingApis
 import no.nav.helse.mottak.v1.DittNavV1Service
 import no.nav.helse.mottak.v1.SoknadV1Api
@@ -72,9 +70,6 @@ fun Application.pleiepengesoknadMottak() {
 
     install(CallIdRequired)
 
-    install(MicrometerMetrics) {
-        init(appId)
-    }
 
     intercept(ApplicationCallPipeline.Monitoring) {
         call.request.log()
