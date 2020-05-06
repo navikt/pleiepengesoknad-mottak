@@ -3,8 +3,6 @@ package no.nav.helse.mottak.v1
 import no.nav.helse.AktoerId
 import no.nav.helse.SoknadId
 import org.json.JSONObject
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
 
@@ -23,7 +21,6 @@ private object JsonKeys {
     internal const val gammelContent_type = "content_type"
     internal const val title = "title"
 }
-val log: Logger = LoggerFactory.getLogger(SoknadV1Incoming::class.java)
 
 internal class SoknadV1Incoming(json: String) {
     private val jsonObject = JSONObject(json)
@@ -47,7 +44,6 @@ internal class SoknadV1Incoming(json: String) {
     }
 
     init {
-        log.info("Debugging JSONObject: {}", jsonObject.toString())
         sokerFodselsNummer = when {
             jsonObject.has(JsonKeys.søker) -> jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.fødselsnummer)
             else -> jsonObject.getJSONObject(JsonKeys.gammelSoker).getString(JsonKeys.gammelFodselsnummer)

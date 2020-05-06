@@ -50,7 +50,6 @@ internal fun Route.SoknadV1Api(
 
 private suspend fun ApplicationCall.soknad(): SoknadV1Incoming {
     val json = receiveStream().use { String(it.readAllBytes(), Charsets.UTF_8) }
-    logger.info("Debugging JSON {}", json)
     val incoming = SoknadV1Incoming(json)
     incoming.validate()
     return incoming
