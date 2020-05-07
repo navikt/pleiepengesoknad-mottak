@@ -68,6 +68,14 @@ Request ID blir ikke propagert videre, og skal ha sitt opphav hos konsumenten om
 - Request ID kan sendes som heder 'X-Request-ID'
 - Versjon på meldingen avledes fra pathen '/v1/soknad' -> 1
 
+## Alarmer
+Vi bruker [nais-alerts](https://doc.nais.io/observability/alerts) for å sette opp alarmer. Disse finner man konfigurert i [nais/alerts.yml](nais/alerts.yml).
+For å oppdatere alarmene etter at det er fjernet/lagt til alarm, kan man kjøre følgende kommandoer.
+```shell script
+kubectl config use-context prod-fss
+kubectl apply -f nais/alerts.yml
+```
+
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
 
