@@ -22,11 +22,6 @@ spec:
       for: 3m
       action: "Sjekk loggene til app {{ $labels.log_app }} i namespace {{ $labels.log_namespace }}, for å se hvorfor det er så mye feil"
 
-    - alert: feil i selftest
-      expr: selftests_aggregate_result_status{app="pleiepengesoknad-mottak"} > 0
-      for: 1m
-      action: "Sjekk app {{ $labels.app }} i namespace {{ $labels.kubernetes_namespace }} sine selftest for å se hva som er galt"
-
     - alert: Høy andel HTTP serverfeil (5xx responser)
       severity: danger
       expr: (100 * (sum by (backend) (rate(traefik_backend_requests_total{code=~"^5\\d\\d", backend=~"https://pleiepengesoknad-mottak.nais.*/*"}[3m])) / sum by (backend) (rate(traefik_backend_requests_total{backend=~"https://pleiepengesoknad-mottak.nais.*/*"}[3m])))) > 1
