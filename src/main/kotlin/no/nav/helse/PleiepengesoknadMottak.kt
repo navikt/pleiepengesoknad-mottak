@@ -9,6 +9,7 @@ import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.jackson.jackson
+import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorExperimentalAPI
@@ -67,6 +68,9 @@ fun Application.pleiepengesoknadMottak() {
 
     install(CallIdRequired)
 
+    install(MicrometerMetrics) {
+        init(appId)
+    }
 
     intercept(ApplicationCallPipeline.Monitoring) {
         call.request.log()
