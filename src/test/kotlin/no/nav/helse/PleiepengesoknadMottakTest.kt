@@ -60,7 +60,7 @@ class PleiepengesoknadMottakTest {
         private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
         private val kafkaTestDittNavConsumer = kafkaEnvironment.testDittNavConsumer()
 
-        private val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
+        private val objectMapper = jacksonObjectMapper().pleiepengesøknadMottakKonfigurert()
 
         private val authorizedAccessToken = Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak")
         private val unAauthorizedAccessToken = Azure.V2_0.generateJwt(clientId = "ikke-authorized-client", audience = "pleiepengesoknad-mottak")

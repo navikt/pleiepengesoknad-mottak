@@ -1,6 +1,9 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
@@ -59,7 +62,7 @@ fun Application.pleiepengesoknadMottak() {
 
     install(ContentNegotiation) {
         jackson {
-            dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+            pleiepengesøknadMottakKonfigurert()
         }
     }
 
@@ -129,6 +132,19 @@ fun Application.pleiepengesoknadMottak() {
                 )
             }
         }
+    }
+}
+
+fun ObjectMapper.pleiepengesøknadMottakKonfigurert(): ObjectMapper {
+    return dusseldorfConfigured().apply {
+        propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+    }
+}
+
+fun k9DokumentKonfigurert() : ObjectMapper {
+    return jacksonObjectMapper().dusseldorfConfigured().apply {
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
     }
 }
 
