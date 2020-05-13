@@ -17,7 +17,7 @@ internal fun SoknadV1Incoming.validate() {
     if (sokerFodselsNummer.length != 11 || !sokerFodselsNummer.erKunSiffer()) {
         violations.add(
             Violation(
-                parameterName = "soker.fodselsnummer",
+                parameterName = "søker.fødselsnummer",
                 parameterType = ParameterType.ENTITY,
                 reason = "Ikke gyldig fødselsnummer.",
                 invalidValue = sokerFodselsNummer
@@ -27,7 +27,7 @@ internal fun SoknadV1Incoming.validate() {
     if (!sokerAktoerId.id.erKunSiffer()) {
         violations.add(
             Violation(
-                parameterName = "soker.aktoer_id",
+                parameterName = "søker.aktørId",
                 parameterType = ParameterType.ENTITY,
                 reason = "Ikke gyldig Aktør ID.",
                 invalidValue = sokerAktoerId.id

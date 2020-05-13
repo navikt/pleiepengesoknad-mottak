@@ -11,8 +11,6 @@ import io.ktor.features.CallId
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Url
 import io.ktor.jackson.jackson
 import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
@@ -21,10 +19,10 @@ import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import no.nav.helse.auth.AccessTokenClientResolver
 import no.nav.helse.dokument.DokumentGateway
-import no.nav.helse.dusseldorf.ktor.auth.*
-import no.nav.helse.dusseldorf.ktor.client.HttpRequestHealthCheck
-import no.nav.helse.dusseldorf.ktor.client.HttpRequestHealthConfig
-import no.nav.helse.dusseldorf.ktor.client.buildURL
+import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
+import no.nav.helse.dusseldorf.ktor.auth.allIssuers
+import no.nav.helse.dusseldorf.ktor.auth.clients
+import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
 import no.nav.helse.dusseldorf.ktor.core.*
 import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -135,11 +133,7 @@ fun Application.pleiepengesoknadMottak() {
     }
 }
 
-fun ObjectMapper.pleiepengesøknadMottakKonfigurert(): ObjectMapper {
-    return dusseldorfConfigured().apply {
-        propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
-    }
-}
+fun ObjectMapper.pleiepengesøknadMottakKonfigurert(): ObjectMapper = dusseldorfConfigured()
 
 fun k9DokumentKonfigurert() : ObjectMapper {
     return jacksonObjectMapper().dusseldorfConfigured().apply {

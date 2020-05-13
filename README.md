@@ -1,5 +1,6 @@
 # pleiepengesoknad-mottak
 ![CI / CD](https://github.com/navikt/pleiepengesoknad-mottak/workflows/CI%20/%20CD/badge.svg)
+![NAIS Alerts](https://github.com/navikt/pleiepengesoknad-mottak/workflows/Alerts/badge.svg)
 
 Tjeneste som tar imot søknader om pleiepenger og legger de til til prosessering.
 Mottar søknad som REST API-kall. Legges videre på en Kafka Topic som tjenesten [pleiepengesoknad-prosessering](https://github.com/navikt/pleiepengesoknad-prosessering) prosesserer.
@@ -69,12 +70,7 @@ Request ID blir ikke propagert videre, og skal ha sitt opphav hos konsumenten om
 - Versjon på meldingen avledes fra pathen '/v1/soknad' -> 1
 
 ## Alarmer
-Vi bruker [nais-alerts](https://doc.nais.io/observability/alerts) for å sette opp alarmer. Disse finner man konfigurert i [nais/alerts.yml](nais/alerts.yml).
-For å oppdatere alarmene etter at det er fjernet/lagt til alarm, kan man kjøre følgende kommandoer.
-```shell script
-kubectl config use-context prod-fss
-kubectl apply -f nais/alerts.yml
-```
+Vi bruker [nais-alerts](https://doc.nais.io/observability/alerts) for å sette opp alarmer. Disse finner man konfigurert i [nais/alerts.yml](nais/alerterator.yml).
 
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
