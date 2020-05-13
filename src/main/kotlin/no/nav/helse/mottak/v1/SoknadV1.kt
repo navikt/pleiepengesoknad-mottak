@@ -2,9 +2,9 @@ package no.nav.helse.mottak.v1
 
 import no.nav.helse.SoknadId
 import no.nav.helse.AktoerId
-import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import java.net.URI
+import java.util.*
 
 private object JsonKeys {
     internal const val vedlegg = "vedlegg"
@@ -28,7 +28,7 @@ internal class SoknadV1Incoming(json: String) {
         jsonObject.getJSONArray(JsonKeys.vedlegg).forEach {
             val vedleggJson = it as JSONObject
             vedlegg.add(Vedlegg(
-                content = Base64.decodeBase64(vedleggJson.getString(JsonKeys.content)),
+                content = Base64.getDecoder().decode(vedleggJson.getString(JsonKeys.content)),
                 contentType = vedleggJson.getString(JsonKeys.contentType),
                 title = vedleggJson.getString(JsonKeys.title)
             ))
