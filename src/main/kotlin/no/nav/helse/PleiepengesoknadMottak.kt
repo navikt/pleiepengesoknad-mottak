@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import io.ktor.application.*
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
@@ -56,8 +55,8 @@ fun Application.pleiepengesoknadMottak() {
     }
 
     install(ContentNegotiation) {
-        jackson { dusseldorfConfigured()
-            .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
+        jackson {
+            dusseldorfConfigured()
         }
     }
 
