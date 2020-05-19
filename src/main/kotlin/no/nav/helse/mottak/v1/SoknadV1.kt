@@ -9,16 +9,12 @@ import java.util.*
 private object JsonKeys {
     internal const val vedlegg = "vedlegg"
     internal const val søker = "søker"
-    internal const val gammelSoker = "soker"
     internal const val aktørId = "aktørId"
-    internal const val gammelAktoerId = "aktoer_id"
     internal const val vedleggUrls = "vedleggUrls"
     internal const val søknadId = "søknadId"
     internal const val fødselsnummer = "fødselsnummer"
-    internal const val gammelFodselsnummer = "fodselsnummer"
     internal const val content = "content"
     internal const val contentType = "contentType"
-    internal const val gammelContent_type = "content_type"
     internal const val title = "title"
 }
 
@@ -34,9 +30,7 @@ internal class SoknadV1Incoming(json: String) {
             val vedleggJson = it as JSONObject
             vedlegg.add(Vedlegg(
                 content = Base64.getDecoder().decode(vedleggJson.getString(JsonKeys.content)),
-                contentType = when{
-                    vedleggJson.has(JsonKeys.gammelContent_type) -> vedleggJson.getString(JsonKeys.gammelContent_type)
-                    else ->vedleggJson.getString(JsonKeys.contentType)},
+                contentType = vedleggJson.getString(JsonKeys.contentType),
                 title = vedleggJson.getString(JsonKeys.title)
             ))
         }
@@ -44,17 +38,12 @@ internal class SoknadV1Incoming(json: String) {
     }
 
     init {
-        sokerFodselsNummer = when {
-            jsonObject.has(JsonKeys.søker) -> jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.fødselsnummer)
-            else -> jsonObject.getJSONObject(JsonKeys.gammelSoker).getString(JsonKeys.gammelFodselsnummer)
-        }
+        sokerFodselsNummer = jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.fødselsnummer)
         vedlegg = hentVedlegg()
         jsonObject.remove(JsonKeys.vedlegg)
     }
 
-    internal val sokerAktoerId = when{
-        jsonObject.has(JsonKeys.søker) -> AktoerId(jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.aktørId))
-        else -> AktoerId(jsonObject.getJSONObject(JsonKeys.gammelSoker).getString(JsonKeys.gammelAktoerId))}
+    internal val sokerAktoerId = AktoerId(jsonObject.getJSONObject(JsonKeys.søker).getString(JsonKeys.aktørId))
 
     internal fun medVedleggUrls(vedleggUrls: List<URI>) : SoknadV1Incoming {
         jsonObject.put(JsonKeys.vedleggUrls, vedleggUrls)
