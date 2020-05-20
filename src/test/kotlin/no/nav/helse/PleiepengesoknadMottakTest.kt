@@ -16,10 +16,10 @@ import io.ktor.server.testing.setBody
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.core.fromResources
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
-import no.nav.helse.mottak.v1.*
+import no.nav.helse.mottak.v1.SoknadV1Incoming
+import no.nav.helse.mottak.v1.SoknadV1Outgoing
 import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import org.junit.AfterClass
@@ -124,31 +124,6 @@ class PleiepengesoknadMottakTest {
     fun `Gyldig søknad blir lagt til prosessering`() {
         gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
         gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-    }
-
-    @Test
-    fun `Gyldig søknad med snake_case blir lagt til prosessering`() {
-        gyldigSoknadMedSnake_caseBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-        gyldigSoknadMedSnake_caseBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-    }
-
-    private fun gyldigSoknadMedSnake_caseBlirLagtTilProsessering(accessToken: String) {
-        val soknad = gyldigSoknadMedSnake_case(
-            fødselsnummerSøker = gyldigFodselsnummerA
-        )
-
-        val soknadId = requestAndAssert(
-            soknad = soknad,
-            expectedCode = HttpStatusCode.Accepted,
-            expectedResponse = null,
-            accessToken = accessToken
-        )
-
-        val sendtTilProsessering = hentSoknadSendtTilProsessering(soknadId)
-        verifiserSoknadLagtTilProsessering(
-            incomingJsonString = soknad,
-            outgoingJsonObject = sendtTilProsessering
-        )
     }
 
     private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
@@ -362,28 +337,6 @@ class PleiepengesoknadMottakTest {
             }
         }
         """.trimIndent()
-
-    private fun gyldigSoknadMedSnake_case(fødselsnummerSøker: String): String =
-        """
-            {
-          "soker": {
-            "fodselsnummer": "$fødselsnummerSøker",
-            "aktoer_id": "123456"
-          },
-          vedlegg: [
-            {
-              "content": "${Base64.encodeBase64String("iPhone_6.jpg".fromResources().readBytes())}",
-              "content_type": "image/jpeg",
-              "title": "Et fint bilde"
-            }
-          ],
-          "hvilke_som_helst_andre_atributter": {
-            "enabled": true,
-            "norsk": "Sære Åreknuter"
-          }
-        }   
-        """.trimIndent()
-
 
     private fun hentSoknadSendtTilProsessering(soknadId: String?) : JSONObject {
         assertNotNull(soknadId)
