@@ -5,7 +5,6 @@ val dusseldorfKtorVersion = "1.3.2.9c88b78"
 val ktorVersion = ext.get("ktorVersion").toString()
 val kafkaEmbeddedEnvVersion = "2.2.0"
 val kafkaVersion = "2.3.0" // Alligned med version fra kafka-embedded-env
-val brukernotifikasjonSchemaVersion = "1.2020.02.07-13.16-fa9d319688b1"
 val confluentVersion = "5.2.0"
 
 
@@ -55,7 +54,6 @@ dependencies {
 
     // Kafka
     compile("org.apache.kafka:kafka-clients:$kafkaVersion")
-    compile("no.nav:brukernotifikasjon-schemas:$brukernotifikasjonSchemaVersion")
     compile("io.confluent:kafka-avro-serializer:$confluentVersion")
 
 

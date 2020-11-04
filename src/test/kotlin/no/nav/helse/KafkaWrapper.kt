@@ -2,8 +2,6 @@ package no.nav.helse
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import no.nav.brukernotifikasjon.schemas.Beskjed
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.kafka.TopicEntry
@@ -81,16 +79,6 @@ private fun KafkaEnvironment.testDittNavConsumerProperties() : MutableMap<String
     }
 }
 
-internal fun KafkaEnvironment.testDittNavConsumer() : KafkaConsumer<Nokkel, Beskjed> {
-    val consumer = KafkaConsumer<Nokkel, Beskjed>(
-        testDittNavConsumerProperties(),
-        NokkelDeserializer(),
-        BeskjedDeserializer()
-    )
-    consumer.subscribe(listOf(Topics.DITT_NAV_BESKJED))
-    return consumer
-}
-
 internal fun KafkaConsumer<String, TopicEntry<JSONObject>>.hentSoknad(
     soknadId: String,
     maxWaitInSeconds: Long = 20
@@ -149,18 +137,6 @@ private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<JSONObject>
     }
     override fun close() {}
 
-}
-
-private class NokkelDeserializer : Deserializer<Nokkel> {
-    override fun deserialize(topic: String?, data: ByteArray?): Nokkel {
-        return no.nav.brukernotifikasjon.schemas.Nokkel.newBuilder().build()
-    }
-}
-
-private class BeskjedDeserializer : Deserializer<Beskjed> {
-    override fun deserialize(topic: String?, data: ByteArray?): Beskjed {
-        return no.nav.brukernotifikasjon.schemas.Beskjed.newBuilder().build()
-    }
 }
 
 private class EttersendingOutgoingDeserializer : Deserializer<TopicEntry<JSONObject>> {

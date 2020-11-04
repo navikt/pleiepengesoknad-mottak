@@ -58,7 +58,6 @@ class PleiepengesoknadMottakTest {
 
         private val kafkaEnvironment = KafkaWrapper.bootstrap()
         private val kafkaTestConsumer = kafkaEnvironment.testConsumer()
-        private val kafkaTestDittNavConsumer = kafkaEnvironment.testDittNavConsumer()
 
         private val objectMapper = jacksonObjectMapper().pleiepengesøknadMottakKonfigurert()
 
