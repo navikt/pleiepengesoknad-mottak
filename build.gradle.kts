@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val dusseldorfKtorVersion = "1.3.2.9c88b78"
+val dusseldorfKtorVersion = "1.5.0.0d3bd1e"
 val ktorVersion = ext.get("ktorVersion").toString()
 val kafkaEmbeddedEnvVersion = "2.2.0"
 val kafkaVersion = "2.3.0" // Alligned med version fra kafka-embedded-env
@@ -12,13 +12,13 @@ val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
 
 plugins {
-    kotlin("jvm") version "1.3.41"
+    kotlin("jvm") version "1.4.21"
     id("com.github.johnrengelman.shadow") version "5.1.0"
 }
 
 
 buildscript {
-    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/9c88b788e57939fb6e3d18650393a7e9fb65960f/gradle/dusseldorf-ktor.gradle.kts")
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/0d3bd1efaadd5b2ab34fa68c51af3e29bcf6a147/gradle/dusseldorf-ktor.gradle.kts")
 }
 
 
@@ -90,21 +90,5 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "5.6"
-}
-
-tasks.register("createDependabotFile") {
-    doLast {
-        mkdir("$projectDir/dependabot")
-        val file = File("$projectDir/dependabot/build.gradle")
-        file.writeText( "// Do not edit manually! This file was created by the 'createDependabotFile' task defined in the root build.gradle.kts file.\n")
-        file.appendText("dependencies {\n")
-        project.configurations.getByName("runtimeClasspath").allDependencies
-            .filter { it.group != rootProject.name && it.version != null }
-            .forEach { file.appendText("    compile '${it.group}:${it.name}:${it.version}'\n") }
-        project.configurations.getByName("testRuntimeClasspath").allDependencies
-            .filter { it.group != rootProject.name && it.version != null }
-            .forEach { file.appendText("    testCompile '${it.group}:${it.name}:${it.version}'\n") }
-        file.appendText("}\n")
-    }
+    gradleVersion = "6.7.1"
 }
