@@ -23,7 +23,7 @@ buildscript {
 
 
 repositories {
-    maven("http://packages.confluent.io/maven/")
+    mavenLocal()
 
     maven {
         name = "GitHubPackages"
@@ -34,9 +34,9 @@ repositories {
         }
     }
 
-    jcenter()
-    mavenLocal()
     mavenCentral()
+    jcenter()
+    maven("http://packages.confluent.io/maven/")
 }
 
 
