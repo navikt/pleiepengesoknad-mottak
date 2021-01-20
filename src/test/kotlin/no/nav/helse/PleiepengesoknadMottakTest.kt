@@ -205,8 +205,7 @@ class PleiepengesoknadMottakTest {
                         {
                             "name" : "X-Correlation-ID",
                             "reason" : "Correlation ID må settes.",
-                            "type": "header",
-                            "invalid_value": null
+                            "type": "header"
                         }
                     ]
                 }
