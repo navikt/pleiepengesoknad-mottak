@@ -12,7 +12,7 @@ val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
 
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.4.30"
     id("com.github.johnrengelman.shadow") version "5.1.0"
 }
 
