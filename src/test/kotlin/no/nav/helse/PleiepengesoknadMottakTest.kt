@@ -18,6 +18,7 @@ import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
+import no.nav.helse.mottak.v1.JsonKeys
 import no.nav.helse.mottak.v1.SoknadV1Incoming
 import no.nav.helse.mottak.v1.SoknadV1Outgoing
 import org.apache.commons.codec.binary.Base64
@@ -27,10 +28,12 @@ import org.junit.BeforeClass
 import org.skyscreamer.jsonassert.JSONAssert
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @KtorExperimentalAPI
 class PleiepengesoknadMottakTest {
@@ -121,12 +124,54 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Gyldig søknad blir lagt til prosessering`() {
-        gyldigSoknadBlirLagtTilProsessering(Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
-        gyldigSoknadBlirLagtTilProsessering(Azure.V2_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak"))
+        gyldigSoknadBlirLagtTilProsessering(
+            Azure.V1_0.generateJwt(
+                clientId = "pleiepengesoknad-api",
+                audience = "pleiepengesoknad-mottak"
+            )
+        )
+        gyldigSoknadBlirLagtTilProsessering(
+            Azure.V2_0.generateJwt(
+                clientId = "pleiepengesoknad-api",
+                audience = "pleiepengesoknad-mottak"
+            )
+        )
+    }
+
+    @Test
+    fun `Gyldig søknad med søknadId på request body`() {
+        val forventetSøknadId = UUID.randomUUID().toString()
+        val soknad = gyldigSøknad(
+            fødselsnummerSøker = dNummerA,
+            søknadId = forventetSøknadId
+        )
+
+        requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.Accepted,
+            expectedResponse = """{"id":"$forventetSøknadId"}"""
+        )
+    }
+
+    @Test
+    fun `Gyldig søknad uten søknadId på request body`() {
+        val soknad = gyldigSøknad(
+            fødselsnummerSøker = dNummerA,
+            søknadId = null
+        )
+
+        val soknadId = requestAndAssert(
+            soknad = soknad,
+            expectedCode = HttpStatusCode.Accepted,
+            expectedResponse = null
+        )
+
+        assertNotNull(soknadId)
+        assertTrue(soknadId.isNotBlank())
     }
 
     private fun gyldigSoknadBlirLagtTilProsessering(accessToken: String) {
-        val soknad = gyldigSoknad(
+        val soknad = gyldigSøknad(
             fødselsnummerSøker = gyldigFodselsnummerA
         )
 
@@ -146,7 +191,7 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Gyldig søknad fra D-nummer blir lagt til prosessering`() {
-        val soknad = gyldigSoknad(
+        val soknad = gyldigSøknad(
             fødselsnummerSøker = dNummerA
         )
 
@@ -165,7 +210,7 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Request fra ikke autorisert system feiler`() {
-        val soknad = gyldigSoknad(
+        val soknad = gyldigSøknad(
             fødselsnummerSøker = gyldigFodselsnummerA
         )
 
@@ -187,7 +232,7 @@ class PleiepengesoknadMottakTest {
 
     @Test
     fun `Request uten corelation id feiler`() {
-        val soknad = gyldigSoknad(
+        val soknad = gyldigSøknad(
             fødselsnummerSøker = gyldigFodselsnummerA
         )
 
@@ -269,7 +314,7 @@ class PleiepengesoknadMottakTest {
         val outgoing = SoknadV1Outgoing(outgoingJsonObject)
 
         val outgoingFromIncoming = SoknadV1Incoming(incomingJsonString)
-            .medSoknadId(outgoing.soknadId)
+            .medSøknadId(outgoing.soknadId)
             .medVedleggUrls(outgoing.vedleggUrls)
             .somOutgoing()
 
@@ -317,9 +362,16 @@ class PleiepengesoknadMottakTest {
     }
 
 
-    private fun gyldigSoknad( fødselsnummerSøker : String) : String =
+    private fun gyldigSøknad(fødselsnummerSøker : String, søknadId: String? = null) : String =
         """
+        
         {
+            "${JsonKeys.søknadId}": ${
+                    when (søknadId) {
+                        null -> null
+                        else -> "$søknadId"
+                    }
+            },
             "søker": {
                 "fødselsnummer": "$fødselsnummerSøker",
                 "aktørId": "123456"
