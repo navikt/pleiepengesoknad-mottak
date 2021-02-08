@@ -34,7 +34,7 @@ internal class SoknadV1MottakService(
 
         val outgoing = soknad
             .medVedleggUrls(vedleggUrls)
-            .medSoknadId(soknadId)
+            .medSøknadId(soknadId)
             .somOutgoing()
 
         logger.trace("Legger på kø")
