@@ -2,7 +2,7 @@ package no.nav.helse
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.auth.Authentication
@@ -134,7 +134,7 @@ fun ObjectMapper.pleiepengesøknadMottakKonfigurert(): ObjectMapper = dusseldorf
 fun k9DokumentKonfigurert() : ObjectMapper {
     return jacksonObjectMapper().dusseldorfConfigured().apply {
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+        propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
     }
 }
 
