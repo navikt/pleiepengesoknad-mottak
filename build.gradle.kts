@@ -1,24 +1,22 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val dusseldorfKtorVersion = "1.5.0.0d3bd1e"
+val dusseldorfKtorVersion = "1.5.2.5b2dff7"
 val ktorVersion = ext.get("ktorVersion").toString()
-val kafkaEmbeddedEnvVersion = "2.2.0"
-val kafkaVersion = "2.3.0" // Alligned med version fra kafka-embedded-env
+val kafkaEmbeddedEnvVersion = ext.get("kafkaEmbeddedEnvVersion").toString()
+val kafkaVersion = ext.get("kafkaVersion").toString() // Alligned med version fra kafka-embedded-env
 val confluentVersion = "5.2.0"
-
 
 val mainClass = "no.nav.helse.PleiepengesoknadMottakKt"
 
-
 plugins {
-    kotlin("jvm") version "1.4.21"
-    id("com.github.johnrengelman.shadow") version "5.1.0"
+    kotlin("jvm") version "1.4.32"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 
 buildscript {
-    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/0d3bd1efaadd5b2ab34fa68c51af3e29bcf6a147/gradle/dusseldorf-ktor.gradle.kts")
+    apply("https://raw.githubusercontent.com/navikt/dusseldorf-ktor/5b2dff7a11531e487ebdee06b6ae94e0e50287c2/gradle/dusseldorf-ktor.gradle.kts")
 }
 
 
@@ -33,9 +31,9 @@ repositories {
             password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
         }
     }
-
     mavenCentral()
-    jcenter()
+    maven("https://jitpack.io")
+
     maven("http://packages.confluent.io/maven/")
 }
 
@@ -90,5 +88,5 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "6.7.1"
+    gradleVersion = "6.8.3"
 }
