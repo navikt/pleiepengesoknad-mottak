@@ -6,7 +6,8 @@
   "minReplicas": "1",
   "maxReplicas": "2",
   "ingresses": [
-    "https://pleiepengesoknad-mottak.nais.preprod.local"
+    "https://pleiepengesoknad-mottak.nais.preprod.local",
+    "https://pleiepengesoknad-mottak.dev-fss-pub.nais.io"
   ],
   "env": {
     "K9_DOKUMENT_BASE_URL": "https://k9-dokument.nais.preprod.local",
