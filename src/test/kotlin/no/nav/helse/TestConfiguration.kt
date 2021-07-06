@@ -2,7 +2,6 @@ package no.nav.helse
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import no.nav.common.KafkaEnvironment
-import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
 import no.nav.helse.dusseldorf.testsupport.wiremock.getAzureV1WellKnownUrl
 import no.nav.helse.dusseldorf.testsupport.wiremock.getAzureV2WellKnownUrl
 
@@ -34,8 +33,7 @@ object TestConfiguration {
         if (wireMockServer != null) {
             map["nav.auth.clients.0.alias"] = "azure-v2"
             map["nav.auth.clients.0.client_id"] = "pleiepengesoknad-mottak"
-            map["nav.auth.clients.0.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
-            map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
+            map["nav.auth.clients.0.client_secret"] = "secret-key"
             map["nav.auth.clients.0.discovery_endpoint"] = wireMockServer.getAzureV2WellKnownUrl()
             map["nav.auth.scopes.lagre-dokument"] = "k9-dokument/.default"
         }
