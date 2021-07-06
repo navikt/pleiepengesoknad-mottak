@@ -7,6 +7,16 @@ metadata:
     team: {{team}}
 spec:
   image: {{ image }}
+  azure:
+    application:
+      enabled: true
+      tenant: {{tenant}}
+  accessPolicy:
+    inbound:
+      rules:
+        - application: pleiepengesoknad-api
+          namespace: dusseldorf
+          cluster: {{pleiepengesoknad-api-cluster}}
   port: 8080
   liveness:
     path: isalive

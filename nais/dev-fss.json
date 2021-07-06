@@ -1,8 +1,10 @@
 {
   "app": "pleiepengesoknad-mottak",
   "cluster": "dev-fss",
-  "namespace": "default",
+  "namespace": "dusseldorf",
   "team": "dusseldorf",
+  "tenant" : "trygdeetaten.no",
+  "pleiepengesoknad-api-cluster" : "dev-gcp",
   "minReplicas": "1",
   "maxReplicas": "2",
   "ingresses": [

@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val dusseldorfKtorVersion = "1.5.2.5b2dff7"
 val ktorVersion = ext.get("ktorVersion").toString()
@@ -52,8 +52,6 @@ dependencies {
 
     // Kafka
     implementation ("org.apache.kafka:kafka-clients:$kafkaVersion")
-    implementation ("io.confluent:kafka-avro-serializer:$confluentVersion")
-
 
     // Test
     testImplementation  ("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
