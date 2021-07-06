@@ -1,8 +1,10 @@
 {
   "app": "pleiepengesoknad-mottak",
   "cluster": "prod-fss",
-  "namespace": "default",
+  "namespace": "dusseldorf",
   "team": "dusseldorf",
+  "tenant" : "nav.no",
+  "pleiepengesoknad-api-cluster" : "prod-gcp",
   "minReplicas": "1",
   "maxReplicas": "2",
   "ingresses": [
