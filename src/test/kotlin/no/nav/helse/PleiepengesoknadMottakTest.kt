@@ -70,9 +70,7 @@ class PleiepengesoknadMottakTest {
         private val authorizedAccessToken = Azure.V1_0.generateJwt(clientId = "pleiepengesoknad-api", audience = "pleiepengesoknad-mottak")
         private val unAauthorizedAccessToken = Azure.V2_0.generateJwt(clientId = "ikke-authorized-client", audience = "pleiepengesoknad-mottak", accessAsApplication = false)
 
-        private var engine = newEngine(kafkaEnvironment).apply {
-            start(wait = true)
-        }
+        private var engine = newEngine(kafkaEnvironment)
 
         private fun getConfig(kafkaEnvironment: KafkaEnvironment) : ApplicationConfig {
             val fileConfig = ConfigFactory.load()
