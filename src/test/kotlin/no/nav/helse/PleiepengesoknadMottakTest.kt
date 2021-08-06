@@ -14,6 +14,7 @@ import io.ktor.server.testing.createTestEnvironment
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.util.KtorExperimentalAPI
+import io.prometheus.client.CollectorRegistry
 import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.ktor.core.fromResources
 import no.nav.helse.dusseldorf.testsupport.jws.Azure
@@ -25,6 +26,8 @@ import org.apache.commons.codec.binary.Base64
 import org.json.JSONObject
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.skyscreamer.jsonassert.JSONAssert
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -85,15 +88,16 @@ class PleiepengesoknadMottakTest {
             config = getConfig(kafkaEnvironment)
         })
 
-        @BeforeClass
+        @BeforeAll
         @JvmStatic
         fun buildUp() {
             logger.info("Building up")
+            CollectorRegistry.defaultRegistry.clear()
             engine.start(wait = true)
             logger.info("Buildup complete")
         }
 
-        @AfterClass
+        @AfterAll
         @JvmStatic
         fun tearDown() {
             logger.info("Tearing down")
