@@ -4,6 +4,7 @@
   "namespace": "dusseldorf",
   "team": "dusseldorf",
   "tenant" : "nav.no",
+  "kafka-pool" : "nav-prod",
   "pleiepengesoknad-api-cluster" : "prod-gcp",
   "minReplicas": "1",
   "maxReplicas": "2",
@@ -15,8 +16,7 @@
     "K9_DOKUMENT_BASE_URL": "https://k9-dokument.nais.adeo.no",
     "AZURE_CLIENT_ID": "4dc7783f-ee44-4707-ae5c-1d824d19f59c",
     "AZURE_V1_DISCOVERY_ENDPOINT": "https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/.well-known/openid-configuration",
-    "LAGRE_DOKUMENT_SCOPES": "0c5a6709-ba2a-42b7-bbfc-9b9f844e2ee2/.default",
-    "KAFKA_BOOTSTRAP_SERVERS": "a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443"
+    "LAGRE_DOKUMENT_SCOPES": "0c5a6709-ba2a-42b7-bbfc-9b9f844e2ee2/.default"
   },
   "slack-channel": "sif-alerts",
   "slack-notify-type": "<!channel> | pleiepengesoknad-mottak | ",

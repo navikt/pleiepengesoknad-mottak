@@ -71,9 +71,6 @@ internal fun KafkaConsumer<String, TopicEntry<JSONObject>>.hentSoknad(
     throw IllegalStateException("Fant ikke opprettet oppgave for søknad $soknadId etter $maxWaitInSeconds sekunder.")
 }
 
-fun KafkaEnvironment.username() = username
-fun KafkaEnvironment.password() = password
-
 private class SoknadV1OutgoingDeserialiser : Deserializer<TopicEntry<JSONObject>> {
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun deserialize(topic: String, data: ByteArray): TopicEntry<JSONObject> {
